@@ -46,9 +46,11 @@ export async function reservarCita(
   const { fecha, hora_inicio, hora_fin, nombre, email, telefono } = parsed.data;
 
   const supabase = createServiceRoleClient();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = supabase as any;
 
   // 2. Obtener config del profesional
-  const { data: config, error: configError } = await supabase
+  const { data: config, error: configError } = await db
     .from("profesional_config")
     .select("*")
     .single();
@@ -62,7 +64,7 @@ export async function reservarCita(
   const fechaFinISO    = buildTimestamp(new Date(`${fecha}T12:00:00`), hora_fin);
 
   // 4. Verificar que el slot sigue disponible (anti-race condition)
-  const { data: citasExistentes, error: checkError } = await supabase
+  const { data: citasExistentes, error: checkError } = await db
     .from("citas")
     .select("id")
     .eq("profesional_id", config.id)
@@ -82,7 +84,7 @@ export async function reservarCita(
   }
 
   // 5. Insertar la cita
-  const { data: cita, error: insertError } = await supabase
+  const { data: cita, error: insertError } = await db
     .from("citas")
     .insert({
       profesional_id:   config.id,
@@ -135,7 +137,7 @@ export async function reservarCita(
   ]);
 
   // 7. Actualizar flags de email en la cita
-  await supabase
+  await db
     .from("citas")
     .update({
       email_paciente_enviado:    emailPacienteOk,

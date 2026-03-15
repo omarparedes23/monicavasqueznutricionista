@@ -17,8 +17,10 @@ export async function GET(request: NextRequest) {
   }
 
   const supabase = createServiceRoleClient();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = supabase as any;
 
-  const { data: config, error: configError } = await supabase
+  const { data: config, error: configError } = await db
     .from("profesional_config")
     .select("*")
     .single();
@@ -30,7 +32,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const { data: disponibilidad, error: dispError } = await supabase
+  const { data: disponibilidad, error: dispError } = await db
     .from("disponibilidad_semanal")
     .select("*")
     .eq("profesional_id", config.id)
@@ -43,7 +45,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const { data: citas, error: citasError } = await supabase
+  const { data: citas, error: citasError } = await db
     .from("citas")
     .select("*")
     .eq("profesional_id", config.id)

@@ -24,11 +24,12 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
 
   const supabase = createServiceRoleClient();
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: cita, error: fetchError } = await supabase
     .from("citas")
     .select("id, estado")
     .eq("id", id)
-    .single();
+    .single() as any;
 
   if (fetchError || !cita) {
     return NextResponse.json({ error: "Cita no encontrada." }, { status: 404 });
@@ -180,11 +181,12 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     console.log("Intentando actualizar ID:", id);
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: rowsActualizadas, error: updateError } = await supabase
       .from("citas")
       .update({ fecha_inicio: fechaInicioISO, fecha_fin: fechaFinISO })
       .eq("id", id)
-      .select();
+      .select() as any;
 
     if (updateError) {
       console.error("[PATCH /api/appointments] Error actualizando cita:", updateError);

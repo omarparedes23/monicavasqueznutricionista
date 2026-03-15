@@ -23,13 +23,14 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
   const { id } = await params;
 
   const supabase = createServiceRoleClient();
-
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: cita, error: fetchError } = await supabase
+  const db = supabase as any;
+
+  const { data: cita, error: fetchError } = await db
     .from("citas")
     .select("id, estado")
     .eq("id", id)
-    .single() as any;
+    .single();
 
   if (fetchError || !cita) {
     return NextResponse.json({ error: "Cita no encontrada." }, { status: 404 });
@@ -39,9 +40,9 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ error: "La cita ya está cancelada." }, { status: 409 });
   }
 
-  const { error: updateError } = await supabase
+  const { error: updateError } = await db
     .from("citas")
-    .update({ estado: "cancelada" as const })
+    .update({ estado: "cancelada" })
     .eq("id", id);
 
   if (updateError) {
@@ -83,8 +84,10 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     const { date, time } = parsed.data;
 
     const supabase = createServiceRoleClient();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = supabase as any;
 
-    const { data: citaExistente, error: fetchError } = await supabase
+    const { data: citaExistente, error: fetchError } = await db
       .from("citas")
       .select("*")
       .eq("id", id)
@@ -101,7 +104,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    const { data: config, error: configError } = await supabase
+    const { data: config, error: configError } = await db
       .from("profesional_config")
       .select("*")
       .single();
@@ -121,13 +124,13 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     const hora_fin = format(addMinutes(slotStartDt, config.duracion_cita_minutos), "HH:mm");
 
     // Verificar disponibilidad excluyendo la propia cita
-    const { data: disponibilidad } = await supabase
+    const { data: disponibilidad } = await db
       .from("disponibilidad_semanal")
       .select("*")
       .eq("profesional_id", config.id)
       .eq("activo", true);
 
-    const { data: citasDelDia } = await supabase
+    const { data: citasDelDia } = await db
       .from("citas")
       .select("*")
       .eq("profesional_id", config.id)
@@ -155,7 +158,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     const fechaFinISO = buildTimestamp(new Date(`${date}T12:00:00`), hora_fin);
 
     // Verificación anti-race condition (excluyendo la propia cita)
-    const { data: citasConflicto, error: checkError } = await supabase
+    const { data: citasConflicto, error: checkError } = await db
       .from("citas")
       .select("id")
       .eq("profesional_id", config.id)
@@ -181,12 +184,11 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     console.log("Intentando actualizar ID:", id);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: rowsActualizadas, error: updateError } = await supabase
+    const { data: rowsActualizadas, error: updateError } = await db
       .from("citas")
       .update({ fecha_inicio: fechaInicioISO, fecha_fin: fechaFinISO })
       .eq("id", id)
-      .select() as any;
+      .select();
 
     if (updateError) {
       console.error("[PATCH /api/appointments] Error actualizando cita:", updateError);

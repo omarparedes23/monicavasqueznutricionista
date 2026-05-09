@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
   const supabase = createServiceRoleClient();
 
   const { data, error } = await supabase
-    .from("citas")
+    .from("nutri_citas")
     .select("id, fecha_inicio, fecha_fin, paciente_nombre")
     .ilike("paciente_nombre", `%${name.trim()}%`)
     .order("fecha_inicio", { ascending: false });

@@ -17,7 +17,6 @@
 # misc
 .DS_Store
 *.pem
-*.md
 
 # debug
 npm-debug.log*
@@ -34,3 +33,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# private docs
+CLAUDE.md
+
+# agent teams lite
+.atl/

@@ -49,13 +49,11 @@ export async function POST(request: NextRequest) {
     parsed.data;
 
   const supabase = createServiceRoleClient();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = supabase as any;
 
   console.log("[POST /api/appointments] Body recibido:", JSON.stringify(body));
 
-  const { data: config, error: configError } = await db
-    .from("profesional_config")
+  const { data: config, error: configError } = await supabase
+    .from("nutri_profesional_config")
     .select("*")
     .single();
 
@@ -75,14 +73,14 @@ export async function POST(request: NextRequest) {
   const hora_fin = format(addMinutes(slotStartDt, config.duracion_cita_minutos), "HH:mm");
 
   // Verificar que el slot exista en la disponibilidad y esté libre
-  const { data: disponibilidad } = await db
-    .from("disponibilidad_semanal")
+  const { data: disponibilidad } = await supabase
+    .from("nutri_disponibilidad_semanal")
     .select("*")
     .eq("profesional_id", config.id)
     .eq("activo", true);
 
-  const { data: citasDelDia } = await db
-    .from("citas")
+  const { data: citasDelDia } = await supabase
+    .from("nutri_citas")
     .select("*")
     .eq("profesional_id", config.id)
     .neq("estado", "cancelada")
@@ -92,7 +90,7 @@ export async function POST(request: NextRequest) {
   const slots = calcularSlotsDisponibles(
     new Date(`${date}T12:00:00`),
     disponibilidad ?? [],
-    citasDelDia ?? [],
+    (citasDelDia ?? []) as import("@/types").Cita[],
     config.duracion_cita_minutos
   );
 
@@ -108,8 +106,8 @@ export async function POST(request: NextRequest) {
   const fechaFinISO = buildTimestamp(new Date(`${date}T12:00:00`), hora_fin);
 
   // Verificación anti-race condition
-  const { data: citasConflicto, error: checkError } = await db
-    .from("citas")
+  const { data: citasConflicto, error: checkError } = await supabase
+    .from("nutri_citas")
     .select("id")
     .eq("profesional_id", config.id)
     .neq("estado", "cancelada")
@@ -130,9 +128,40 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Auto-crear usuario auth si no existe
+  let pacienteId: string | null = null;
+  if (patient_email) {
+    try {
+      const authAdmin = (supabase as any).auth.admin;
+      const { data: createData, error: createError } = await authAdmin.createUser({
+        email: patient_email,
+        email_confirm: true,
+        user_metadata: { nombre: patient_name },
+      });
+      if (createError) {
+        if (
+          createError.message?.toLowerCase().includes("already") ||
+          createError.message?.toLowerCase().includes("duplicate")
+        ) {
+          const { data: existingId } = await supabase.rpc("get_user_id_by_email", {
+            user_email: patient_email,
+          });
+          if (existingId) pacienteId = existingId as string;
+        } else {
+          console.error("[POST /api/appointments] Error creando usuario:", createError);
+        }
+      } else if (createData?.user) {
+        pacienteId = createData.user.id;
+      }
+    } catch (err) {
+      console.error("[POST /api/appointments] Excepción creando usuario:", err);
+    }
+  }
+
   // Insertar cita
   const insertPayload = {
     profesional_id:    config.id,
+    paciente_id:       pacienteId,
     paciente_nombre:   patient_name,
     paciente_email:    patient_email ?? "",
     paciente_telefono: patient_phone ?? "",
@@ -143,8 +172,8 @@ export async function POST(request: NextRequest) {
   };
   console.log("[POST /api/appointments] Insert payload:", JSON.stringify(insertPayload));
 
-  const { data: cita, error: insertError } = await db
-    .from("citas")
+  const { data: cita, error: insertError } = await supabase
+    .from("nutri_citas")
     .insert(insertPayload)
     .select()
     .single();
@@ -200,8 +229,8 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  await db
-    .from("citas")
+  await supabase
+    .from("nutri_citas")
     .update({
       email_profesional_enviado: emailProfesionalOk,
       email_paciente_enviado:    emailPacienteOk,

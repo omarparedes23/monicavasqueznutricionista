@@ -23,11 +23,9 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
   const { id } = await params;
 
   const supabase = createServiceRoleClient();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = supabase as any;
 
-  const { data: cita, error: fetchError } = await db
-    .from("citas")
+  const { data: cita, error: fetchError } = await supabase
+    .from("nutri_citas")
     .select("id, estado")
     .eq("id", id)
     .single();
@@ -40,8 +38,8 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ error: "La cita ya está cancelada." }, { status: 409 });
   }
 
-  const { error: updateError } = await db
-    .from("citas")
+  const { error: updateError } = await supabase
+    .from("nutri_citas")
     .update({ estado: "cancelada" })
     .eq("id", id);
 
@@ -84,11 +82,9 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     const { date, time } = parsed.data;
 
     const supabase = createServiceRoleClient();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = supabase as any;
 
-    const { data: citaExistente, error: fetchError } = await db
-      .from("citas")
+    const { data: citaExistente, error: fetchError } = await supabase
+      .from("nutri_citas")
       .select("*")
       .eq("id", id)
       .single();
@@ -104,10 +100,10 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    const { data: config, error: configError } = await db
-      .from("profesional_config")
-      .select("*")
-      .single();
+  const { data: config, error: configError } = await supabase
+    .from("nutri_profesional_config")
+    .select("*")
+    .single();
 
     if (configError || !config) {
       console.error("[PATCH /api/appointments] Error cargando config:", configError);
@@ -124,14 +120,14 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     const hora_fin = format(addMinutes(slotStartDt, config.duracion_cita_minutos), "HH:mm");
 
     // Verificar disponibilidad excluyendo la propia cita
-    const { data: disponibilidad } = await db
-      .from("disponibilidad_semanal")
-      .select("*")
-      .eq("profesional_id", config.id)
-      .eq("activo", true);
+  const { data: disponibilidad } = await supabase
+    .from("nutri_disponibilidad_semanal")
+    .select("*")
+    .eq("profesional_id", config.id)
+    .eq("activo", true);
 
-    const { data: citasDelDia } = await db
-      .from("citas")
+    const { data: citasDelDia } = await supabase
+      .from("nutri_citas")
       .select("*")
       .eq("profesional_id", config.id)
       .neq("estado", "cancelada")
@@ -142,7 +138,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     const slots = calcularSlotsDisponibles(
       new Date(`${date}T12:00:00`),
       disponibilidad ?? [],
-      citasDelDia ?? [],
+      (citasDelDia ?? []) as import("@/types").Cita[],
       config.duracion_cita_minutos
     );
 
@@ -158,8 +154,8 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     const fechaFinISO = buildTimestamp(new Date(`${date}T12:00:00`), hora_fin);
 
     // Verificación anti-race condition (excluyendo la propia cita)
-    const { data: citasConflicto, error: checkError } = await db
-      .from("citas")
+    const { data: citasConflicto, error: checkError } = await supabase
+      .from("nutri_citas")
       .select("id")
       .eq("profesional_id", config.id)
       .neq("estado", "cancelada")
@@ -184,8 +180,8 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     console.log("Intentando actualizar ID:", id);
 
-    const { data: rowsActualizadas, error: updateError } = await db
-      .from("citas")
+    const { data: rowsActualizadas, error: updateError } = await supabase
+      .from("nutri_citas")
       .update({ fecha_inicio: fechaInicioISO, fecha_fin: fechaFinISO })
       .eq("id", id)
       .select();

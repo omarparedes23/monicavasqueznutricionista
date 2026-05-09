@@ -17,11 +17,9 @@ export async function GET(request: NextRequest) {
   }
 
   const supabase = createServiceRoleClient();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = supabase as any;
 
-  const { data: config, error: configError } = await db
-    .from("profesional_config")
+  const { data: config, error: configError } = await supabase
+    .from("nutri_profesional_config")
     .select("*")
     .single();
 
@@ -32,8 +30,8 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const { data: disponibilidad, error: dispError } = await db
-    .from("disponibilidad_semanal")
+  const { data: disponibilidad, error: dispError } = await supabase
+    .from("nutri_disponibilidad_semanal")
     .select("*")
     .eq("profesional_id", config.id)
     .eq("activo", true);
@@ -45,8 +43,8 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const { data: citas, error: citasError } = await db
-    .from("citas")
+  const { data: citas, error: citasError } = await supabase
+    .from("nutri_citas")
     .select("*")
     .eq("profesional_id", config.id)
     .neq("estado", "cancelada")
@@ -63,7 +61,7 @@ export async function GET(request: NextRequest) {
   const slots = calcularSlotsDisponibles(
     new Date(`${date}T12:00:00`),
     disponibilidad ?? [],
-    citas ?? [],
+    (citas ?? []) as import("@/types").Cita[],
     config.duracion_cita_minutos
   );
 

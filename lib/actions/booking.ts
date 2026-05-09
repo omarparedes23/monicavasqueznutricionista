@@ -46,12 +46,10 @@ export async function reservarCita(
   const { fecha, hora_inicio, hora_fin, nombre, email, telefono } = parsed.data;
 
   const supabase = createServiceRoleClient();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = supabase as any;
 
   // 2. Obtener config del profesional
-  const { data: config, error: configError } = await db
-    .from("profesional_config")
+  const { data: config, error: configError } = await supabase
+    .from("nutri_profesional_config")
     .select("*")
     .single();
 
@@ -64,8 +62,8 @@ export async function reservarCita(
   const fechaFinISO    = buildTimestamp(new Date(`${fecha}T12:00:00`), hora_fin);
 
   // 4. Verificar que el slot sigue disponible (anti-race condition)
-  const { data: citasExistentes, error: checkError } = await db
-    .from("citas")
+  const { data: citasExistentes, error: checkError } = await supabase
+    .from("nutri_citas")
     .select("id")
     .eq("profesional_id", config.id)
     .neq("estado", "cancelada")
@@ -83,11 +81,42 @@ export async function reservarCita(
     };
   }
 
+  // 4.5 Auto-crear usuario auth si no existe (o vincularlo si ya existe)
+  let pacienteId: string | null = null;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const authAdmin = (supabase as any).auth.admin;
+    const { data: createData, error: createError } = await authAdmin.createUser({
+      email,
+      email_confirm: true,
+      user_metadata: { nombre },
+    });
+    if (createError) {
+      if (
+        createError.message?.toLowerCase().includes("already") ||
+        createError.message?.toLowerCase().includes("duplicate")
+      ) {
+        // Usuario ya existe → buscar por email via RPC (O(1), no listUsers)
+        const { data: existingId } = await supabase.rpc("get_user_id_by_email", {
+          user_email: email,
+        });
+        if (existingId) pacienteId = existingId as string;
+      } else {
+        console.error("[reservarCita] Error creando usuario:", createError);
+      }
+    } else if (createData?.user) {
+      pacienteId = createData.user.id;
+    }
+  } catch (err) {
+    console.error("[reservarCita] Excepción creando usuario:", err);
+  }
+
   // 5. Insertar la cita
-  const { data: cita, error: insertError } = await db
-    .from("citas")
+  const { data: cita, error: insertError } = await supabase
+    .from("nutri_citas")
     .insert({
       profesional_id:   config.id,
+      paciente_id:      pacienteId,
       paciente_nombre:  nombre,
       paciente_email:   email,
       paciente_telefono: telefono,
@@ -137,8 +166,8 @@ export async function reservarCita(
   ]);
 
   // 7. Actualizar flags de email en la cita
-  await db
-    .from("citas")
+  await supabase
+    .from("nutri_citas")
     .update({
       email_paciente_enviado:    emailPacienteOk,
       email_profesional_enviado: emailProfesionalOk,

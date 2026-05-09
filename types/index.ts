@@ -28,6 +28,7 @@ export type EstadoCita = "confirmada" | "cancelada" | "completada" | "no_asistio
 export interface Cita {
   id: string;
   profesional_id: string;
+  paciente_id: string | null;
   paciente_nombre: string;
   paciente_email: string;
   paciente_telefono: string;
@@ -37,6 +38,61 @@ export interface Cita {
   notas: string | null;
   email_paciente_enviado: boolean;
   email_profesional_enviado: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+// ============================================================
+// NUEVOS TIPOS DE DOMINIO
+// ============================================================
+
+export type Rol = "paciente" | "profesional";
+
+export interface Perfil {
+  id: string;          // FK auth.users
+  nombre: string;
+  foto_url: string | null;
+  fecha_nacimiento: string | null;
+  historia_clinica: string | null;
+  rol: Rol;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Antropometria {
+  id: string;
+  paciente_id: string;
+  peso: number | null;
+  porcentaje_grasa: number | null;
+  cintura: number | null;
+  cadera: number | null;
+  fecha: string;
+  notas: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Plan {
+  id: string;
+  paciente_id: string;
+  titulo: string;
+  descripcion: string | null;
+  file_url: string | null;
+  activo: boolean;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BlogPost {
+  id: string;
+  titulo: string;
+  slug: string;
+  contenido_markdown: string;
+  imagen_url: string | null;
+  tags: string[];
+  published: boolean;
+  published_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -89,33 +145,283 @@ export interface CitaConfirmada {
 }
 
 // ============================================================
-// DATABASE TYPES (Supabase generated-style)
+// DATABASE TYPES (Supabase v2.99+ compatible — inline objects required)
+// Row/Insert/Update must be inline object types, not interface references,
+// so they satisfy the SDK's `Record<string, unknown>` constraint.
 // ============================================================
 export type Database = {
   public: {
     Tables: {
-      profesional_config: {
-        Row: ProfesionalConfig;
-        Insert: Omit<ProfesionalConfig, "id" | "created_at" | "updated_at">;
-        Update: Partial<Omit<ProfesionalConfig, "id" | "created_at" | "updated_at">>;
+      nutri_profesional_config: {
+        Row: {
+          id: string;
+          nombre: string;
+          titulo: string;
+          email_notificacion: string;
+          duracion_cita_minutos: number;
+          zona_horaria: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          nombre?: string;
+          titulo?: string;
+          email_notificacion: string;
+          duracion_cita_minutos?: number;
+          zona_horaria?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          nombre?: string;
+          titulo?: string;
+          email_notificacion?: string;
+          duracion_cita_minutos?: number;
+          zona_horaria?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
         Relationships: [];
       };
-      disponibilidad_semanal: {
-        Row: DisponibilidadSemanal;
-        Insert: Omit<DisponibilidadSemanal, "id" | "created_at">;
-        Update: Partial<Omit<DisponibilidadSemanal, "id" | "created_at">>;
+      nutri_disponibilidad_semanal: {
+        Row: {
+          id: string;
+          profesional_id: string;
+          dia_semana: number;
+          hora_inicio: string;
+          hora_fin: string;
+          activo: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          profesional_id: string;
+          dia_semana: number;
+          hora_inicio: string;
+          hora_fin: string;
+          activo?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          profesional_id?: string;
+          dia_semana?: number;
+          hora_inicio?: string;
+          hora_fin?: string;
+          activo?: boolean;
+          created_at?: string;
+        };
         Relationships: [];
       };
-      citas: {
-        Row: Cita;
-        Insert: Omit<Cita, "id" | "created_at" | "updated_at">;
-        Update: Partial<Omit<Cita, "id" | "created_at" | "updated_at">>;
+      nutri_citas: {
+        Row: {
+          id: string;
+          profesional_id: string;
+          paciente_id: string | null;
+          paciente_nombre: string;
+          paciente_email: string;
+          paciente_telefono: string;
+          fecha_inicio: string;
+          fecha_fin: string;
+          estado: string;
+          notas: string | null;
+          email_paciente_enviado: boolean;
+          email_profesional_enviado: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          profesional_id: string;
+          paciente_id?: string | null;
+          paciente_nombre: string;
+          paciente_email: string;
+          paciente_telefono: string;
+          fecha_inicio: string;
+          fecha_fin: string;
+          estado?: string;
+          notas?: string | null;
+          email_paciente_enviado?: boolean;
+          email_profesional_enviado?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          profesional_id?: string;
+          paciente_id?: string | null;
+          paciente_nombre?: string;
+          paciente_email?: string;
+          paciente_telefono?: string;
+          fecha_inicio?: string;
+          fecha_fin?: string;
+          estado?: string;
+          notas?: string | null;
+          email_paciente_enviado?: boolean;
+          email_profesional_enviado?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      nutri_perfiles: {
+        Row: {
+          id: string;
+          nombre: string;
+          foto_url: string | null;
+          fecha_nacimiento: string | null;
+          historia_clinica: string | null;
+          rol: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id: string;
+          nombre?: string;
+          foto_url?: string | null;
+          fecha_nacimiento?: string | null;
+          historia_clinica?: string | null;
+          rol?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          nombre?: string;
+          foto_url?: string | null;
+          fecha_nacimiento?: string | null;
+          historia_clinica?: string | null;
+          rol?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      nutri_antropometria: {
+        Row: {
+          id: string;
+          paciente_id: string;
+          peso: number | null;
+          porcentaje_grasa: number | null;
+          cintura: number | null;
+          cadera: number | null;
+          fecha: string;
+          notas: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          paciente_id: string;
+          peso?: number | null;
+          porcentaje_grasa?: number | null;
+          cintura?: number | null;
+          cadera?: number | null;
+          fecha: string;
+          notas?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          paciente_id?: string;
+          peso?: number | null;
+          porcentaje_grasa?: number | null;
+          cintura?: number | null;
+          cadera?: number | null;
+          fecha?: string;
+          notas?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      nutri_planes: {
+        Row: {
+          id: string;
+          paciente_id: string;
+          titulo: string;
+          descripcion: string | null;
+          file_url: string | null;
+          activo: boolean;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          paciente_id: string;
+          titulo: string;
+          descripcion?: string | null;
+          file_url?: string | null;
+          activo?: boolean;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          paciente_id?: string;
+          titulo?: string;
+          descripcion?: string | null;
+          file_url?: string | null;
+          activo?: boolean;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      nutri_blog_posts: {
+        Row: {
+          id: string;
+          titulo: string;
+          slug: string;
+          contenido_markdown: string;
+          imagen_url: string | null;
+          tags: string[];
+          published: boolean;
+          published_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          titulo: string;
+          slug: string;
+          contenido_markdown?: string;
+          imagen_url?: string | null;
+          tags?: string[];
+          published?: boolean;
+          published_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          titulo?: string;
+          slug?: string;
+          contenido_markdown?: string;
+          imagen_url?: string | null;
+          tags?: string[];
+          published?: boolean;
+          published_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
         Relationships: [];
       };
     };
-    Views: { [_ in never]: never };
-    Functions: { [_ in never]: never };
-    Enums: { [_ in never]: never };
-    CompositeTypes: { [_ in never]: never };
+    Views: Record<string, never>;
+    Functions: {
+      get_user_id_by_email: {
+        Args: { user_email: string };
+        Returns: string | null;
+      };
+    };
+    Enums: Record<string, never>;
+    CompositeTypes: Record<string, never>;
   };
 };

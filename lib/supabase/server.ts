@@ -41,3 +41,11 @@ export function createServiceRoleClient() {
     { auth: { autoRefreshToken: false, persistSession: false } }
   );
 }
+
+/** Obtiene el usuario autenticado desde el servidor (Server Component / Server Action) */
+export async function getUser() {
+  const supabase = await createServerSupabaseClient();
+  const { data: { user }, error } = await supabase.auth.getUser();
+  if (error || !user) return null;
+  return user;
+}

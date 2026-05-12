@@ -3,13 +3,11 @@ import { Button } from "@/components/ui/Button";
 
 export default function NotFound() {
   return (
-    <main className="min-h-dvh flex items-center justify-center p-4">
-      <div className="max-w-sm w-full text-center">
-        <p className="text-8xl font-black text-slate-200 mb-4">404</p>
-        <h1 className="text-2xl font-bold text-slate-800 mb-2">
-          Página no encontrada
-        </h1>
-        <p className="text-slate-500 mb-8 text-sm">
+    <main className="flex min-h-dvh items-center justify-center p-4">
+      <div className="w-full max-w-sm text-center">
+        <p className="mb-4 text-8xl font-black text-slate-200">404</p>
+        <h1 className="mb-2 text-2xl font-bold text-slate-800">Página no encontrada</h1>
+        <p className="mb-8 text-sm text-slate-500">
           Esta página no existe. Vuelve al inicio para reservar tu cita.
         </p>
         <Link href="/">

@@ -3,10 +3,7 @@
 import { z } from "zod";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { sendEmail } from "@/lib/email/resend";
-import {
-  emailConfirmacionPaciente,
-  emailNuevaCitaProfesional,
-} from "@/lib/email/templates";
+import { emailConfirmacionPaciente, emailNuevaCitaProfesional } from "@/lib/email/templates";
 import { buildTimestamp } from "@/lib/utils/dates";
 import type { ActionResult, CitaConfirmada } from "@/types";
 
@@ -22,10 +19,7 @@ const BookingSchema = z.object({
     .min(2, "El nombre debe tener al menos 2 caracteres")
     .max(100, "Nombre demasiado largo"),
   email: z.string().email("Email inválido"),
-  telefono: z
-    .string()
-    .min(7, "Teléfono inválido")
-    .max(20, "Teléfono demasiado largo"),
+  telefono: z.string().min(7, "Teléfono inválido").max(20, "Teléfono demasiado largo"),
 });
 
 export type BookingInput = z.infer<typeof BookingSchema>;
@@ -33,9 +27,7 @@ export type BookingInput = z.infer<typeof BookingSchema>;
 // ============================================================
 // SERVER ACTION: reservarCita
 // ============================================================
-export async function reservarCita(
-  input: BookingInput
-): Promise<ActionResult<CitaConfirmada>> {
+export async function reservarCita(input: BookingInput): Promise<ActionResult<CitaConfirmada>> {
   // 1. Validar input
   const parsed = BookingSchema.safeParse(input);
   if (!parsed.success) {
@@ -59,7 +51,7 @@ export async function reservarCita(
 
   // 3. Construir timestamps
   const fechaInicioISO = buildTimestamp(new Date(`${fecha}T12:00:00`), hora_inicio);
-  const fechaFinISO    = buildTimestamp(new Date(`${fecha}T12:00:00`), hora_fin);
+  const fechaFinISO = buildTimestamp(new Date(`${fecha}T12:00:00`), hora_fin);
 
   // 4. Verificar que el slot sigue disponible (anti-race condition)
   const { data: citasExistentes, error: checkError } = await supabase
@@ -115,14 +107,14 @@ export async function reservarCita(
   const { data: cita, error: insertError } = await supabase
     .from("nutri_citas")
     .insert({
-      profesional_id:   config.id,
-      paciente_id:      pacienteId,
-      paciente_nombre:  nombre,
-      paciente_email:   email,
+      profesional_id: config.id,
+      paciente_id: pacienteId,
+      paciente_nombre: nombre,
+      paciente_email: email,
       paciente_telefono: telefono,
-      fecha_inicio:     fechaInicioISO,
-      fecha_fin:        fechaFinISO,
-      estado:           "confirmada",
+      fecha_inicio: fechaInicioISO,
+      fecha_fin: fechaFinISO,
+      estado: "confirmada",
     })
     .select()
     .single();
@@ -134,34 +126,34 @@ export async function reservarCita(
 
   // 6. Enviar emails (en paralelo, no bloqueamos si fallan)
   const emailPacienteHtml = emailConfirmacionPaciente({
-    paciente_nombre:      nombre,
-    profesional_nombre:   config.nombre,
-    profesional_titulo:   config.titulo,
-    fecha_inicio:         fechaInicioISO,
+    paciente_nombre: nombre,
+    profesional_nombre: config.nombre,
+    profesional_titulo: config.titulo,
+    fecha_inicio: fechaInicioISO,
     hora_inicio,
     hora_fin,
   });
 
   const emailProfesionalHtml = emailNuevaCitaProfesional({
-    profesional_nombre:  config.nombre,
-    paciente_nombre:     nombre,
-    paciente_email:      email,
-    paciente_telefono:   telefono,
-    fecha_inicio:        fechaInicioISO,
+    profesional_nombre: config.nombre,
+    paciente_nombre: nombre,
+    paciente_email: email,
+    paciente_telefono: telefono,
+    fecha_inicio: fechaInicioISO,
     hora_inicio,
     hora_fin,
   });
 
   const [emailPacienteOk, emailProfesionalOk] = await Promise.all([
     sendEmail({
-      to:      email,
+      to: email,
       subject: `✓ Cita confirmada con ${config.nombre}`,
-      html:    emailPacienteHtml,
+      html: emailPacienteHtml,
     }),
     sendEmail({
-      to:      config.email_notificacion,
+      to: config.email_notificacion,
       subject: `📅 Nueva cita: ${nombre} – ${hora_inicio}`,
-      html:    emailProfesionalHtml,
+      html: emailProfesionalHtml,
     }),
   ]);
 
@@ -169,7 +161,7 @@ export async function reservarCita(
   await supabase
     .from("nutri_citas")
     .update({
-      email_paciente_enviado:    emailPacienteOk,
+      email_paciente_enviado: emailPacienteOk,
       email_profesional_enviado: emailProfesionalOk,
     })
     .eq("id", cita.id);
@@ -177,11 +169,11 @@ export async function reservarCita(
   return {
     success: true,
     data: {
-      id:                cita.id,
-      paciente_nombre:   nombre,
-      paciente_email:    email,
-      fecha_inicio:      fechaInicioISO,
-      fecha_fin:         fechaFinISO,
+      id: cita.id,
+      paciente_nombre: nombre,
+      paciente_email: email,
+      fecha_inicio: fechaInicioISO,
+      fecha_fin: fechaFinISO,
       profesional_nombre: config.nombre,
     },
   };

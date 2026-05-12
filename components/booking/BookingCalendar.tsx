@@ -17,26 +17,16 @@ interface BookingCalendarProps {
   fechaSeleccionada: Date | null;
 }
 
-export function BookingCalendar({
-  onFechaSeleccionada,
-  fechaSeleccionada,
-}: BookingCalendarProps) {
+export function BookingCalendar({ onFechaSeleccionada, fechaSeleccionada }: BookingCalendarProps) {
   const hoy = new Date();
-  const [mesActual, setMesActual] = useState(
-    new Date(hoy.getFullYear(), hoy.getMonth(), 1)
-  );
-  const [fechasDisponibles, setFechasDisponibles] = useState<Set<string>>(
-    new Set()
-  );
+  const [mesActual, setMesActual] = useState(new Date(hoy.getFullYear(), hoy.getMonth(), 1));
+  const [fechasDisponibles, setFechasDisponibles] = useState<Set<string>>(new Set());
   const [cargandoMes, startTransition] = useTransition();
 
   const cargarFechasDelMes = useCallback(
     (fecha: Date) => {
       startTransition(async () => {
-        const result = await getFechasDisponibles(
-          fecha.getFullYear(),
-          fecha.getMonth()
-        );
+        const result = await getFechasDisponibles(fecha.getFullYear(), fecha.getMonth());
         if (result.success) {
           setFechasDisponibles(new Set(result.data));
         }
@@ -56,8 +46,7 @@ export function BookingCalendar({
     // No ir al pasado
     if (
       anterior.getFullYear() < hoy.getFullYear() ||
-      (anterior.getFullYear() === hoy.getFullYear() &&
-        anterior.getMonth() < hoy.getMonth())
+      (anterior.getFullYear() === hoy.getFullYear() && anterior.getMonth() < hoy.getMonth())
     )
       return;
     setMesActual(anterior);
@@ -73,14 +62,10 @@ export function BookingCalendar({
     cargarFechasDelMes(siguiente);
   };
 
-  const grilla = generarGrillaCalendario(
-    mesActual.getFullYear(),
-    mesActual.getMonth()
-  );
+  const grilla = generarGrillaCalendario(mesActual.getFullYear(), mesActual.getMonth());
 
   const esMesAnteriorDeshabilitado =
-    mesActual.getFullYear() === hoy.getFullYear() &&
-    mesActual.getMonth() === hoy.getMonth();
+    mesActual.getFullYear() === hoy.getFullYear() && mesActual.getMonth() === hoy.getMonth();
 
   const esMesSiguienteDeshabilitado =
     mesActual >= new Date(hoy.getFullYear(), hoy.getMonth() + 3, 1);
@@ -88,26 +73,26 @@ export function BookingCalendar({
   return (
     <div className="w-full">
       {/* Header del mes */}
-      <div className="flex items-center justify-between mb-5">
+      <div className="mb-5 flex items-center justify-between">
         <button
           onClick={irMesAnterior}
           disabled={esMesAnteriorDeshabilitado}
           className={cn(
-            "p-2 rounded-xl transition-colors",
+            "rounded-xl p-2 transition-colors",
             esMesAnteriorDeshabilitado
-              ? "text-slate-300 cursor-not-allowed"
+              ? "cursor-not-allowed text-slate-300"
               : "text-slate-500 hover:bg-slate-100 hover:text-slate-700"
           )}
           aria-label="Mes anterior"
         >
-          <ChevronLeft className="w-5 h-5" />
+          <ChevronLeft className="h-5 w-5" />
         </button>
 
         <motion.h3
           key={formatMesAnio(mesActual)}
           initial={{ opacity: 0, y: -4 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-base font-semibold text-slate-800 capitalize"
+          className="text-base font-semibold capitalize text-slate-800"
         >
           {formatMesAnio(mesActual)}
         </motion.h3>
@@ -116,24 +101,21 @@ export function BookingCalendar({
           onClick={irMesSiguiente}
           disabled={esMesSiguienteDeshabilitado}
           className={cn(
-            "p-2 rounded-xl transition-colors",
+            "rounded-xl p-2 transition-colors",
             esMesSiguienteDeshabilitado
-              ? "text-slate-300 cursor-not-allowed"
+              ? "cursor-not-allowed text-slate-300"
               : "text-slate-500 hover:bg-slate-100 hover:text-slate-700"
           )}
           aria-label="Mes siguiente"
         >
-          <ChevronRight className="w-5 h-5" />
+          <ChevronRight className="h-5 w-5" />
         </button>
       </div>
 
       {/* Días de la semana */}
-      <div className="grid grid-cols-7 mb-2">
+      <div className="mb-2 grid grid-cols-7">
         {DIAS_SEMANA_CORTO.map((dia) => (
-          <div
-            key={dia}
-            className="text-center text-xs font-medium text-slate-400 py-1"
-          >
+          <div key={dia} className="py-1 text-center text-xs font-medium text-slate-400">
             {dia}
           </div>
         ))}
@@ -152,12 +134,11 @@ export function BookingCalendar({
             return <div key={`empty-${idx}`} />;
           }
 
-          const fechaStr   = toDateString(fecha);
-          const esHoy      = toDateString(new Date()) === fechaStr;
-          const esPasado   = fecha < new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+          const fechaStr = toDateString(fecha);
+          const esHoy = toDateString(new Date()) === fechaStr;
+          const esPasado = fecha < new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
           const disponible = fechasDisponibles.has(fechaStr) && !esPasado;
-          const seleccionada =
-            fechaSeleccionada && toDateString(fechaSeleccionada) === fechaStr;
+          const seleccionada = fechaSeleccionada && toDateString(fechaSeleccionada) === fechaStr;
 
           return (
             <div key={fechaStr} className="flex justify-center py-0.5">
@@ -167,20 +148,18 @@ export function BookingCalendar({
                 aria-label={`${fecha.getDate()} ${disponible ? "disponible" : "no disponible"}`}
                 aria-pressed={seleccionada ?? false}
                 className={cn(
-                  "w-9 h-9 rounded-xl text-sm font-medium transition-all duration-150",
+                  "h-9 w-9 rounded-xl text-sm font-medium transition-all duration-150",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500",
                   // Estado seleccionado
-                  seleccionada &&
-                    "bg-brand-600 text-white shadow-md shadow-brand-600/30 scale-105",
+                  seleccionada && "scale-105 bg-brand-600 text-white shadow-md shadow-brand-600/30",
                   // Disponible no seleccionado
-                  !seleccionada && disponible &&
-                    "text-slate-700 hover:bg-brand-50 hover:text-brand-700 cursor-pointer",
+                  !seleccionada &&
+                    disponible &&
+                    "cursor-pointer text-slate-700 hover:bg-brand-50 hover:text-brand-700",
                   // Hoy
-                  esHoy && !seleccionada &&
-                    "font-bold ring-1 ring-brand-300",
+                  esHoy && !seleccionada && "font-bold ring-1 ring-brand-300",
                   // No disponible / pasado
-                  !disponible &&
-                    "text-slate-300 cursor-not-allowed"
+                  !disponible && "cursor-not-allowed text-slate-300"
                 )}
               >
                 {fecha.getDate()}
@@ -191,13 +170,13 @@ export function BookingCalendar({
       </motion.div>
 
       {/* Leyenda */}
-      <div className="flex items-center gap-4 mt-4 pt-4 border-t border-slate-100">
+      <div className="mt-4 flex items-center gap-4 border-t border-slate-100 pt-4">
         <div className="flex items-center gap-1.5 text-xs text-slate-500">
-          <div className="w-3 h-3 rounded-full bg-brand-600" />
+          <div className="h-3 w-3 rounded-full bg-brand-600" />
           Disponible
         </div>
         <div className="flex items-center gap-1.5 text-xs text-slate-500">
-          <div className="w-3 h-3 rounded-full bg-slate-200" />
+          <div className="h-3 w-3 rounded-full bg-slate-200" />
           No disponible
         </div>
       </div>

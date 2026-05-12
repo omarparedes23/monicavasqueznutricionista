@@ -5,10 +5,7 @@ import { createServiceRoleClient } from "@/lib/supabase/server";
 import { calcularSlotsDisponibles } from "@/lib/utils/slots";
 import { buildTimestamp } from "@/lib/utils/dates";
 import { sendEmail } from "@/lib/email/resend";
-import {
-  emailConfirmacionPaciente,
-  emailNuevaCitaProfesional,
-} from "@/lib/email/templates";
+import { emailConfirmacionPaciente, emailNuevaCitaProfesional } from "@/lib/email/templates";
 
 const AppointmentSchema = z.object({
   patient_name: z
@@ -45,8 +42,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: firstError }, { status: 400 });
   }
 
-  const { patient_name, date, time, source, patient_email, patient_phone } =
-    parsed.data;
+  const { patient_name, date, time, source, patient_email, patient_phone } = parsed.data;
 
   const supabase = createServiceRoleClient();
 
@@ -115,10 +111,7 @@ export async function POST(request: NextRequest) {
     .gt("fecha_fin", fechaInicioISO);
 
   if (checkError) {
-    return NextResponse.json(
-      { error: "Error al verificar disponibilidad." },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Error al verificar disponibilidad." }, { status: 500 });
   }
 
   if (citasConflicto && citasConflicto.length > 0) {
@@ -160,15 +153,15 @@ export async function POST(request: NextRequest) {
 
   // Insertar cita
   const insertPayload = {
-    profesional_id:    config.id,
-    paciente_id:       pacienteId,
-    paciente_nombre:   patient_name,
-    paciente_email:    patient_email ?? "",
+    profesional_id: config.id,
+    paciente_id: pacienteId,
+    paciente_nombre: patient_name,
+    paciente_email: patient_email ?? "",
     paciente_telefono: patient_phone ?? "",
-    fecha_inicio:      fechaInicioISO,
-    fecha_fin:         fechaFinISO,
-    estado:            "confirmada",
-    notas:             source ? `Reserva vía: ${source}` : null,
+    fecha_inicio: fechaInicioISO,
+    fecha_fin: fechaFinISO,
+    estado: "confirmada",
+    notas: source ? `Reserva vía: ${source}` : null,
   };
   console.log("[POST /api/appointments] Insert payload:", JSON.stringify(insertPayload));
 
@@ -180,10 +173,7 @@ export async function POST(request: NextRequest) {
 
   if (insertError || !cita) {
     console.error("[POST /api/appointments] Insert error:", insertError);
-    return NextResponse.json(
-      { error: "Error al guardar la cita." },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Error al guardar la cita." }, { status: 500 });
   }
 
   // Enviar emails — cada uno en su propio try/catch para no bloquear la respuesta
@@ -193,17 +183,17 @@ export async function POST(request: NextRequest) {
   try {
     const emailProfesionalHtml = emailNuevaCitaProfesional({
       profesional_nombre: config.nombre,
-      paciente_nombre:    patient_name,
-      paciente_email:     patient_email ?? "No proporcionado",
-      paciente_telefono:  patient_phone ?? "No proporcionado",
-      fecha_inicio:       fechaInicioISO,
-      hora_inicio:        time,
+      paciente_nombre: patient_name,
+      paciente_email: patient_email ?? "No proporcionado",
+      paciente_telefono: patient_phone ?? "No proporcionado",
+      fecha_inicio: fechaInicioISO,
+      hora_inicio: time,
       hora_fin,
     });
     emailProfesionalOk = await sendEmail({
-      to:      config.email_notificacion,
+      to: config.email_notificacion,
       subject: `📅 Nueva cita: ${patient_name} – ${time}`,
-      html:    emailProfesionalHtml,
+      html: emailProfesionalHtml,
     });
   } catch (err) {
     console.error("[POST /api/appointments] Error enviando email al profesional:", err);
@@ -212,17 +202,17 @@ export async function POST(request: NextRequest) {
   if (patient_email) {
     try {
       const emailPacienteHtml = emailConfirmacionPaciente({
-        paciente_nombre:    patient_name,
+        paciente_nombre: patient_name,
         profesional_nombre: config.nombre,
         profesional_titulo: config.titulo,
-        fecha_inicio:       fechaInicioISO,
-        hora_inicio:        time,
+        fecha_inicio: fechaInicioISO,
+        hora_inicio: time,
         hora_fin,
       });
       emailPacienteOk = await sendEmail({
-        to:      patient_email,
+        to: patient_email,
         subject: `✓ Cita confirmada con ${config.nombre}`,
-        html:    emailPacienteHtml,
+        html: emailPacienteHtml,
       });
     } catch (err) {
       console.error("[POST /api/appointments] Error enviando email al paciente:", err);
@@ -233,20 +223,20 @@ export async function POST(request: NextRequest) {
     .from("nutri_citas")
     .update({
       email_profesional_enviado: emailProfesionalOk,
-      email_paciente_enviado:    emailPacienteOk,
+      email_paciente_enviado: emailPacienteOk,
     })
     .eq("id", cita.id);
 
   return NextResponse.json(
     {
-      id:            cita.id,
-      patient_name:  cita.paciente_nombre,
+      id: cita.id,
+      patient_name: cita.paciente_nombre,
       patient_email: cita.paciente_email || null,
       date,
       time,
-      end_time:      hora_fin,
-      status:        cita.estado,
-      created_at:    cita.created_at,
+      end_time: hora_fin,
+      status: cita.estado,
+      created_at: cita.created_at,
     },
     { status: 201 }
   );

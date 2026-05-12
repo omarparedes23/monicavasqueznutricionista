@@ -18,7 +18,7 @@ export interface DisponibilidadSemanal {
   profesional_id: string;
   dia_semana: number; // 0=Dom, 1=Lun, 2=Mar, 3=Mié, 4=Jue, 5=Vie, 6=Sáb
   hora_inicio: string; // "HH:mm"
-  hora_fin: string;    // "HH:mm"
+  hora_fin: string; // "HH:mm"
   activo: boolean;
   created_at: string;
 }
@@ -33,7 +33,7 @@ export interface Cita {
   paciente_email: string;
   paciente_telefono: string;
   fecha_inicio: string; // ISO 8601
-  fecha_fin: string;    // ISO 8601
+  fecha_fin: string; // ISO 8601
   estado: EstadoCita;
   notas: string | null;
   email_paciente_enviado: boolean;
@@ -49,7 +49,7 @@ export interface Cita {
 export type Rol = "paciente" | "profesional";
 
 export interface Perfil {
-  id: string;          // FK auth.users
+  id: string; // FK auth.users
   nombre: string;
   foto_url: string | null;
   fecha_nacimiento: string | null;
@@ -90,11 +90,22 @@ export interface BlogPost {
   slug: string;
   contenido_markdown: string;
   imagen_url: string | null;
-  tags: string[];
+  tags: string[] | null;
   published: boolean;
   published_at: string | null;
   created_at: string;
   updated_at: string;
+  excerpt?: string | null;
+}
+
+export interface BlogPostCard {
+  id: string;
+  titulo: string;
+  slug: string;
+  excerpt: string;
+  imagen_url: string | null;
+  tags: string[] | null;
+  published_at: string | null;
 }
 
 // ============================================================
@@ -104,7 +115,7 @@ export interface BlogPost {
 /** Un slot de tiempo disponible para reservar */
 export interface TimeSlot {
   hora_inicio: string; // "HH:mm"
-  hora_fin: string;    // "HH:mm"
+  hora_fin: string; // "HH:mm"
   disponible: boolean;
 }
 
@@ -123,13 +134,11 @@ export interface BookingState {
 }
 
 /** Respuesta de los Server Actions */
-export type ActionResult<T = void> =
-  | { success: true; data: T }
-  | { success: false; error: string };
+export type ActionResult<T = void> = { success: true; data: T } | { success: false; error: string };
 
 /** Disponibilidad por fecha (para el calendario) */
 export interface DisponibilidadFecha {
-  fecha: string;       // "YYYY-MM-DD"
+  fecha: string; // "YYYY-MM-DD"
   slots: TimeSlot[];
   tiene_disponibilidad: boolean;
 }

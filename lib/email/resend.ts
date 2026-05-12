@@ -18,8 +18,7 @@ interface SendEmailParams {
 
 export async function sendEmail(params: SendEmailParams): Promise<boolean> {
   const resend = getResend();
-  const fromAddress =
-    params.from ?? process.env.RESEND_FROM_EMAIL ?? "onboarding@resend.dev";
+  const fromAddress = params.from ?? process.env.RESEND_FROM_EMAIL ?? "onboarding@resend.dev";
 
   try {
     const { error } = await resend.emails.send({

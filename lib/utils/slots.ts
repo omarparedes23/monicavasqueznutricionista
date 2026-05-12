@@ -27,10 +27,7 @@ function parseHoraString(hora: string): { hours: number; minutes: number } {
  */
 function buildDateTime(fecha: Date, hora: string): Date {
   const { hours, minutes } = parseHoraString(hora);
-  return setMilliseconds(
-    setSeconds(setMinutes(setHours(new Date(fecha), hours), minutes), 0),
-    0
-  );
+  return setMilliseconds(setSeconds(setMinutes(setHours(new Date(fecha), hours), minutes), 0), 0);
 }
 
 /**
@@ -52,9 +49,7 @@ export function calcularSlotsDisponibles(
   const diaSemana = fecha.getDay();
 
   // Filtrar bloques del día correspondiente y activos
-  const bloquesDelDia = disponibilidad.filter(
-    (b) => b.dia_semana === diaSemana && b.activo
-  );
+  const bloquesDelDia = disponibilidad.filter((b) => b.dia_semana === diaSemana && b.activo);
 
   if (bloquesDelDia.length === 0) return [];
 
@@ -65,8 +60,10 @@ export function calcularSlotsDisponibles(
     let cursor = buildDateTime(fecha, bloque.hora_inicio);
     const bloqueFinDt = buildDateTime(fecha, bloque.hora_fin);
 
-    while (isBefore(addMinutes(cursor, duracionMinutos), bloqueFinDt) ||
-           addMinutes(cursor, duracionMinutos).getTime() === bloqueFinDt.getTime()) {
+    while (
+      isBefore(addMinutes(cursor, duracionMinutos), bloqueFinDt) ||
+      addMinutes(cursor, duracionMinutos).getTime() === bloqueFinDt.getTime()
+    ) {
       const slotFin = addMinutes(cursor, duracionMinutos);
 
       // No mostrar slots en el pasado
@@ -79,18 +76,16 @@ export function calcularSlotsDisponibles(
       const ocupado = citasOcupadas.some((cita) => {
         if (cita.estado === "cancelada") return false;
         const citaInicio = parseISO(cita.fecha_inicio);
-        const citaFin   = parseISO(cita.fecha_fin);
+        const citaFin = parseISO(cita.fecha_fin);
 
         // Hay solapamiento si los intervalos se intersectan
-        return (
-          isBefore(cursor, citaFin) && isAfter(slotFin, citaInicio)
-        );
+        return isBefore(cursor, citaFin) && isAfter(slotFin, citaInicio);
       });
 
       slots.push({
         hora_inicio: format(cursor, "HH:mm"),
-        hora_fin:    format(slotFin, "HH:mm"),
-        disponible:  !ocupado,
+        hora_fin: format(slotFin, "HH:mm"),
+        disponible: !ocupado,
       });
 
       cursor = slotFin;
@@ -110,12 +105,7 @@ export function fechaTieneDisponibilidad(
   citasOcupadas: Cita[],
   duracionMinutos: number
 ): boolean {
-  const slots = calcularSlotsDisponibles(
-    fecha,
-    disponibilidad,
-    citasOcupadas,
-    duracionMinutos
-  );
+  const slots = calcularSlotsDisponibles(fecha, disponibilidad, citasOcupadas, duracionMinutos);
   return slots.some((s) => s.disponible);
 }
 

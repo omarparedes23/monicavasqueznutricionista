@@ -10,10 +10,7 @@ export async function GET(request: NextRequest) {
   const name = request.nextUrl.searchParams.get("name");
 
   if (!name || name.trim().length === 0) {
-    return NextResponse.json(
-      { error: "El parámetro 'name' es requerido." },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "El parámetro 'name' es requerido." }, { status: 400 });
   }
 
   const supabase = createServiceRoleClient();
@@ -26,10 +23,7 @@ export async function GET(request: NextRequest) {
 
   if (error) {
     console.error("[GET /api/appointments/search] Supabase error:", error);
-    return NextResponse.json(
-      { error: "Error al conectar con la base de datos." },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Error al conectar con la base de datos." }, { status: 500 });
   }
 
   return NextResponse.json(data ?? []);

@@ -44,10 +44,7 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
     .eq("id", id);
 
   if (updateError) {
-    return NextResponse.json(
-      { error: "Error al cancelar la cita." },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Error al cancelar la cita." }, { status: 500 });
   }
 
   return NextResponse.json({ id, status: "cancelada" });
@@ -100,10 +97,10 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-  const { data: config, error: configError } = await supabase
-    .from("nutri_profesional_config")
-    .select("*")
-    .single();
+    const { data: config, error: configError } = await supabase
+      .from("nutri_profesional_config")
+      .select("*")
+      .single();
 
     if (configError || !config) {
       console.error("[PATCH /api/appointments] Error cargando config:", configError);
@@ -120,11 +117,11 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     const hora_fin = format(addMinutes(slotStartDt, config.duracion_cita_minutos), "HH:mm");
 
     // Verificar disponibilidad excluyendo la propia cita
-  const { data: disponibilidad } = await supabase
-    .from("nutri_disponibilidad_semanal")
-    .select("*")
-    .eq("profesional_id", config.id)
-    .eq("activo", true);
+    const { data: disponibilidad } = await supabase
+      .from("nutri_disponibilidad_semanal")
+      .select("*")
+      .eq("profesional_id", config.id)
+      .eq("activo", true);
 
     const { data: citasDelDia } = await supabase
       .from("nutri_citas")
@@ -165,10 +162,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     if (checkError) {
       console.error("[PATCH /api/appointments] Error verificando disponibilidad:", checkError);
-      return NextResponse.json(
-        { error: "Error al verificar disponibilidad." },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "Error al verificar disponibilidad." }, { status: 500 });
     }
 
     if (citasConflicto && citasConflicto.length > 0) {
@@ -188,10 +182,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     if (updateError) {
       console.error("[PATCH /api/appointments] Error actualizando cita:", updateError);
-      return NextResponse.json(
-        { error: "Error al reprogramar la cita." },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "Error al reprogramar la cita." }, { status: 500 });
     }
 
     if (!rowsActualizadas || rowsActualizadas.length === 0) {
@@ -207,18 +198,18 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     // Notificar al profesional — el fallo de email nunca bloquea la respuesta
     try {
       const emailHtml = emailNuevaCitaProfesional({
-        profesional_nombre:  config.nombre,
-        paciente_nombre:     citaActualizada.paciente_nombre,
-        paciente_email:      citaActualizada.paciente_email,
-        paciente_telefono:   citaActualizada.paciente_telefono,
-        fecha_inicio:        fechaInicioISO,
-        hora_inicio:         time,
+        profesional_nombre: config.nombre,
+        paciente_nombre: citaActualizada.paciente_nombre,
+        paciente_email: citaActualizada.paciente_email,
+        paciente_telefono: citaActualizada.paciente_telefono,
+        fecha_inicio: fechaInicioISO,
+        hora_inicio: time,
         hora_fin,
       });
       await sendEmail({
-        to:      config.email_notificacion,
+        to: config.email_notificacion,
         subject: `📅 Cita reprogramada: ${citaActualizada.paciente_nombre} – ${time}`,
-        html:    emailHtml,
+        html: emailHtml,
       });
     } catch (emailErr) {
       console.error("[PATCH /api/appointments] Error enviando email de notificación:", emailErr);
@@ -226,18 +217,15 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     }
 
     return NextResponse.json({
-      id:           citaActualizada.id,
+      id: citaActualizada.id,
       patient_name: citaActualizada.paciente_nombre,
       date,
       time,
-      end_time:     hora_fin,
-      status:       citaActualizada.estado,
+      end_time: hora_fin,
+      status: citaActualizada.estado,
     });
   } catch (error) {
     console.error("Detalle del error en PATCH:", error);
-    return NextResponse.json(
-      { error: "Error interno del servidor." },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Error interno del servidor." }, { status: 500 });
   }
 }

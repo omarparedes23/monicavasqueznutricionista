@@ -24,10 +24,10 @@ interface FormErrors {
 }
 
 export function BookingForm({ fecha, slot, onSuccess, onBack }: BookingFormProps) {
-  const [nombre, setNombre]     = useState("");
-  const [email, setEmail]       = useState("");
+  const [nombre, setNombre] = useState("");
+  const [email, setEmail] = useState("");
   const [telefono, setTelefono] = useState("");
-  const [errors, setErrors]     = useState<FormErrors>({});
+  const [errors, setErrors] = useState<FormErrors>({});
   const [isPending, startTransition] = useTransition();
 
   const validate = (): boolean => {
@@ -58,10 +58,10 @@ export function BookingForm({ fecha, slot, onSuccess, onBack }: BookingFormProps
       const result = await reservarCita({
         fecha: fechaStr,
         hora_inicio: slot.hora_inicio,
-        hora_fin:    slot.hora_fin,
-        nombre:      nombre.trim(),
-        email:       email.trim().toLowerCase(),
-        telefono:    telefono.trim(),
+        hora_fin: slot.hora_fin,
+        nombre: nombre.trim(),
+        email: email.trim().toLowerCase(),
+        telefono: telefono.trim(),
       });
 
       if (result.success) {
@@ -80,13 +80,13 @@ export function BookingForm({ fecha, slot, onSuccess, onBack }: BookingFormProps
       transition={{ duration: 0.25 }}
     >
       {/* Resumen de la cita */}
-      <div className="bg-brand-50 border border-brand-100 rounded-2xl p-4 mb-6">
+      <div className="mb-6 rounded-2xl border border-brand-100 bg-brand-50 p-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-brand-100 flex items-center justify-center flex-shrink-0">
-            <CalendarCheck className="w-5 h-5 text-brand-600" />
+          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-brand-100">
+            <CalendarCheck className="h-5 w-5 text-brand-600" />
           </div>
           <div>
-            <p className="text-sm font-semibold text-brand-800 capitalize">
+            <p className="text-sm font-semibold capitalize text-brand-800">
               {formatFechaLarga(fecha)}
             </p>
             <p className="text-sm text-brand-600">
@@ -107,7 +107,7 @@ export function BookingForm({ fecha, slot, onSuccess, onBack }: BookingFormProps
             if (errors.nombre) setErrors((prev) => ({ ...prev, nombre: undefined }));
           }}
           error={errors.nombre}
-          leftIcon={<User className="w-4 h-4" />}
+          leftIcon={<User className="h-4 w-4" />}
           autoComplete="name"
           autoFocus
         />
@@ -122,7 +122,7 @@ export function BookingForm({ fecha, slot, onSuccess, onBack }: BookingFormProps
             if (errors.email) setErrors((prev) => ({ ...prev, email: undefined }));
           }}
           error={errors.email}
-          leftIcon={<Mail className="w-4 h-4" />}
+          leftIcon={<Mail className="h-4 w-4" />}
           autoComplete="email"
         />
 
@@ -136,7 +136,7 @@ export function BookingForm({ fecha, slot, onSuccess, onBack }: BookingFormProps
             if (errors.telefono) setErrors((prev) => ({ ...prev, telefono: undefined }));
           }}
           error={errors.telefono}
-          leftIcon={<Phone className="w-4 h-4" />}
+          leftIcon={<Phone className="h-4 w-4" />}
           autoComplete="tel"
         />
 
@@ -144,7 +144,7 @@ export function BookingForm({ fecha, slot, onSuccess, onBack }: BookingFormProps
           <motion.div
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
-            className="p-3 rounded-xl bg-red-50 border border-red-200"
+            className="rounded-xl border border-red-200 bg-red-50 p-3"
           >
             <p className="text-sm text-red-600">{errors.general}</p>
           </motion.div>
@@ -163,7 +163,7 @@ export function BookingForm({ fecha, slot, onSuccess, onBack }: BookingFormProps
           <Button
             type="submit"
             loading={isPending}
-            rightIcon={<ArrowRight className="w-4 h-4" />}
+            rightIcon={<ArrowRight className="h-4 w-4" />}
             className="flex-1"
           >
             {isPending ? "Reservando..." : "Confirmar cita"}
@@ -171,7 +171,7 @@ export function BookingForm({ fecha, slot, onSuccess, onBack }: BookingFormProps
         </div>
       </form>
 
-      <p className="text-xs text-slate-400 text-center mt-4">
+      <p className="mt-4 text-center text-xs text-slate-400">
         Recibirás una confirmación por email al reservar.
       </p>
     </motion.div>

@@ -5,13 +5,11 @@ interface EmailConfirmacionPacienteProps {
   profesional_nombre: string;
   profesional_titulo: string;
   fecha_inicio: string; // ISO
-  hora_inicio: string;  // "HH:mm"
-  hora_fin: string;     // "HH:mm"
+  hora_inicio: string; // "HH:mm"
+  hora_fin: string; // "HH:mm"
 }
 
-export function emailConfirmacionPaciente(
-  props: EmailConfirmacionPacienteProps
-): string {
+export function emailConfirmacionPaciente(props: EmailConfirmacionPacienteProps): string {
   const fechaLarga = formatFechaLarga(new Date(props.fecha_inicio));
   const rango = formatRangoCita(props.hora_inicio, props.hora_fin);
 
@@ -110,9 +108,7 @@ interface EmailNuevaCitaProfesionalProps {
   hora_fin: string;
 }
 
-export function emailNuevaCitaProfesional(
-  props: EmailNuevaCitaProfesionalProps
-): string {
+export function emailNuevaCitaProfesional(props: EmailNuevaCitaProfesionalProps): string {
   const fechaLarga = formatFechaLarga(new Date(props.fecha_inicio));
   const rango = formatRangoCita(props.hora_inicio, props.hora_fin);
 

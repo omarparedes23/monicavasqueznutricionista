@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils/cn";
 import { Loader2 } from "lucide-react";
 
 type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
-type ButtonSize    = "sm" | "md" | "lg";
+type ButtonSize = "sm" | "md" | "lg";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
@@ -31,9 +31,9 @@ const variantClasses: Record<ButtonVariant, string> = {
 };
 
 const sizeClasses: Record<ButtonSize, string> = {
-  sm:  "h-8  px-3 text-sm  gap-1.5 rounded-lg",
-  md:  "h-10 px-4 text-sm  gap-2   rounded-xl",
-  lg:  "h-12 px-6 text-base gap-2.5 rounded-xl",
+  sm: "h-8  px-3 text-sm  gap-1.5 rounded-lg",
+  md: "h-10 px-4 text-sm  gap-2   rounded-xl",
+  lg: "h-12 px-6 text-base gap-2.5 rounded-xl",
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -60,18 +60,14 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         className={cn(
           "inline-flex items-center justify-center font-medium transition-all duration-150",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
-          "disabled:opacity-50 disabled:pointer-events-none select-none",
+          "select-none disabled:pointer-events-none disabled:opacity-50",
           variantClasses[variant],
           sizeClasses[size],
           className
         )}
         {...props}
       >
-        {loading ? (
-          <Loader2 className="w-4 h-4 animate-spin" />
-        ) : (
-          leftIcon
-        )}
+        {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : leftIcon}
         {children}
         {!loading && rightIcon}
       </button>

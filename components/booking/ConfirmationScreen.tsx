@@ -12,11 +12,7 @@ interface ConfirmationScreenProps {
   onNuevaReserva: () => void;
 }
 
-export function ConfirmationScreen({
-  cita,
-  slot,
-  onNuevaReserva,
-}: ConfirmationScreenProps) {
+export function ConfirmationScreen({ cita, slot, onNuevaReserva }: ConfirmationScreenProps) {
   const fecha = new Date(cita.fecha_inicio);
 
   return (
@@ -31,9 +27,9 @@ export function ConfirmationScreen({
         initial={{ scale: 0, rotate: -180 }}
         animate={{ scale: 1, rotate: 0 }}
         transition={{ type: "spring", stiffness: 300, damping: 20, delay: 0.1 }}
-        className="w-20 h-20 rounded-full bg-brand-100 flex items-center justify-center mb-6"
+        className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-brand-100"
       >
-        <CheckCircle2 className="w-10 h-10 text-brand-600" />
+        <CheckCircle2 className="h-10 w-10 text-brand-600" />
       </motion.div>
 
       <motion.div
@@ -41,10 +37,8 @@ export function ConfirmationScreen({
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
       >
-        <h2 className="text-2xl font-bold text-slate-900 mb-2">
-          ¡Cita Confirmada!
-        </h2>
-        <p className="text-slate-500 text-sm mb-8">
+        <h2 className="mb-2 text-2xl font-bold text-slate-900">¡Cita Confirmada!</h2>
+        <p className="mb-8 text-sm text-slate-500">
           Hemos enviado los detalles a{" "}
           <span className="font-medium text-slate-700">{cita.paciente_email}</span>
         </p>
@@ -55,26 +49,26 @@ export function ConfirmationScreen({
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-5 mb-6 text-left space-y-4"
+        className="mb-6 w-full space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-5 text-left"
       >
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-brand-100 flex items-center justify-center flex-shrink-0">
-            <Calendar className="w-4 h-4 text-brand-600" />
+          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-brand-100">
+            <Calendar className="h-4 w-4 text-brand-600" />
           </div>
           <div>
-            <p className="text-xs text-slate-500 font-medium">Fecha</p>
-            <p className="text-sm font-semibold text-slate-800 capitalize">
+            <p className="text-xs font-medium text-slate-500">Fecha</p>
+            <p className="text-sm font-semibold capitalize text-slate-800">
               {formatFechaLarga(fecha)}
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-brand-100 flex items-center justify-center flex-shrink-0">
-            <Clock className="w-4 h-4 text-brand-600" />
+          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-brand-100">
+            <Clock className="h-4 w-4 text-brand-600" />
           </div>
           <div>
-            <p className="text-xs text-slate-500 font-medium">Horario</p>
+            <p className="text-xs font-medium text-slate-500">Horario</p>
             <p className="text-sm font-semibold text-slate-800">
               {formatRangoCita(slot.hora_inicio, slot.hora_fin)}
             </p>
@@ -82,14 +76,12 @@ export function ConfirmationScreen({
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-brand-100 flex items-center justify-center flex-shrink-0">
-            <Mail className="w-4 h-4 text-brand-600" />
+          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-brand-100">
+            <Mail className="h-4 w-4 text-brand-600" />
           </div>
           <div>
-            <p className="text-xs text-slate-500 font-medium">Confirmación enviada a</p>
-            <p className="text-sm font-semibold text-slate-800 break-all">
-              {cita.paciente_email}
-            </p>
+            <p className="text-xs font-medium text-slate-500">Confirmación enviada a</p>
+            <p className="break-all text-sm font-semibold text-slate-800">{cita.paciente_email}</p>
           </div>
         </div>
       </motion.div>
@@ -103,7 +95,7 @@ export function ConfirmationScreen({
         <Button
           variant="secondary"
           onClick={onNuevaReserva}
-          leftIcon={<ArrowLeft className="w-4 h-4" />}
+          leftIcon={<ArrowLeft className="h-4 w-4" />}
           className="w-full"
         >
           Reservar otra cita

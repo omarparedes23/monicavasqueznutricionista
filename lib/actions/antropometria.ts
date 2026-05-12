@@ -1,0 +1,123 @@
+"use server";
+
+import { createServerSupabaseClient, createServiceRoleClient } from "@/lib/supabase/server";
+import type { Antropometria } from "@/types";
+
+/**
+ * Obtiene el historial de antropometría del paciente autenticado.
+ * Usa RLS (anon key): el paciente solo ve sus propios datos.
+ */
+export async function getMiHistorial(): Promise<Antropometria[]> {
+  const supabase = await createServerSupabaseClient();
+
+  const { data, error } = await supabase
+    .from("nutri_antropometria")
+    .select("*")
+    .order("fecha", { ascending: false });
+
+  if (error) {
+    console.error("[getMiHistorial] Error:", error);
+    return [];
+  }
+
+  return (data ?? []) as Antropometria[];
+}
+
+/**
+ * Obtiene el historial de antropometría de un paciente específico.
+ * Usa service role para que el profesional pueda ver cualquier paciente.
+ */
+export async function getHistorialPaciente(pacienteId: string): Promise<Antropometria[]> {
+  const supabase = createServiceRoleClient();
+
+  const { data, error } = await supabase
+    .from("nutri_antropometria")
+    .select("*")
+    .eq("paciente_id", pacienteId)
+    .order("fecha", { ascending: false });
+
+  if (error) {
+    console.error("[getHistorialPaciente] Error:", error);
+    return [];
+  }
+
+  return (data ?? []) as Antropometria[];
+}
+
+/**
+ * Obtiene la última medición del paciente autenticado.
+ */
+export async function getMiUltimaMedicion(): Promise<Antropometria | null> {
+  const supabase = await createServerSupabaseClient();
+
+  const { data, error } = await supabase
+    .from("nutri_antropometria")
+    .select("*")
+    .order("fecha", { ascending: false })
+    .limit(1)
+    .single();
+
+  if (error) {
+    if (error.code !== "PGRST116") {
+      console.error("[getMiUltimaMedicion] Error:", error);
+    }
+    return null;
+  }
+
+  return data as Antropometria;
+}
+
+export interface AddMedicionInput {
+  peso: number;
+  porcentaje_grasa?: number;
+  cintura?: number;
+  cadera?: number;
+  fecha: string;
+  notas?: string;
+}
+
+export interface AddMedicionResult {
+  success: boolean;
+  error?: string;
+  data?: Antropometria;
+}
+
+/**
+ * Registra una nueva medición para el paciente autenticado.
+ * RLS verifica que paciente_id = auth.uid().
+ */
+export async function addMedicion(input: AddMedicionInput): Promise<AddMedicionResult> {
+  const supabase = await createServerSupabaseClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { success: false, error: "No autenticado" };
+  }
+
+  // @supabase/ssr v0.6.1 + supabase-js v2.99.x type incompatibility — cast to any
+  const db = supabase as any;
+
+  const { data, error } = await db
+    .from("nutri_antropometria")
+    .insert({
+      paciente_id: user.id,
+      peso: input.peso,
+      porcentaje_grasa: input.porcentaje_grasa ?? null,
+      cintura: input.cintura ?? null,
+      cadera: input.cadera ?? null,
+      fecha: input.fecha,
+      notas: input.notas ?? null,
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error("[addMedicion] Error:", error);
+    return { success: false, error: error.message };
+  }
+
+  return { success: true, data: data as Antropometria };
+}

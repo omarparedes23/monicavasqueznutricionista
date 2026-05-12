@@ -19,9 +19,7 @@ interface ConfigYDisponibilidad {
  * Obtiene la configuración del profesional y sus bloques de disponibilidad.
  * Se llama una vez al cargar la página (SSR).
  */
-export async function getConfigYDisponibilidad(): Promise<
-  ActionResult<ConfigYDisponibilidad>
-> {
+export async function getConfigYDisponibilidad(): Promise<ActionResult<ConfigYDisponibilidad>> {
   const supabase = createServiceRoleClient();
 
   const { data: config, error: configError } = await supabase
@@ -83,7 +81,7 @@ export async function getSlotsParaFecha(
 
   // 3. Citas confirmadas en la fecha indicada
   const fechaInicio = `${fechaStr}T00:00:00.000Z`;
-  const fechaFin    = `${fechaStr}T23:59:59.999Z`;
+  const fechaFin = `${fechaStr}T23:59:59.999Z`;
 
   const { data: citas, error: citasError } = await supabase
     .from("nutri_citas")

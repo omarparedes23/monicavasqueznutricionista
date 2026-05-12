@@ -1,19 +1,17 @@
-export default function PublicLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="min-h-dvh flex flex-col">
-      {/* Decorative top bar */}
-      <div className="h-1 bg-gradient-to-r from-brand-400 via-brand-500 to-brand-600 w-full" />
+import { Navbar } from "@/components/layout/Navbar";
 
-      <div className="flex-1 flex flex-col items-center justify-start py-10 px-4">
-        {children}
-      </div>
+export default function PublicLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex min-h-dvh flex-col">
+      {/* Decorative top bar */}
+      <div className="h-1 w-full bg-gradient-to-r from-brand-400 via-brand-500 to-brand-600" />
+
+      <Navbar />
+
+      <div className="flex flex-1 flex-col items-center justify-start px-4 py-10">{children}</div>
 
       {/* Footer */}
-      <footer className="mt-12 text-center pb-8">
+      <footer className="mt-12 pb-8 text-center">
         <p className="text-xs text-slate-400">
           ¿Problemas para reservar? Contáctanos por{" "}
           <a
@@ -25,7 +23,7 @@ export default function PublicLayout({
             WhatsApp
           </a>
         </p>
-        <p className="text-xs text-slate-300 mt-2">
+        <p className="mt-2 text-xs text-slate-300">
           © {new Date().getFullYear()} · Sistema de turnos online
         </p>
       </footer>

@@ -32,9 +32,25 @@ export async function middleware(request: NextRequest) {
     request.nextUrl.pathname.startsWith("/profesional") ||
     request.nextUrl.pathname.startsWith("/paciente");
 
-  const isAuth =
-    request.nextUrl.pathname === "/login" ||
-    request.nextUrl.pathname === "/register";
+  // Role-based access control: prevent cross-role navigation
+  if (user && isDashboard) {
+    const { data: perfil } = await supabase
+      .from("nutri_perfiles")
+      .select("rol")
+      .eq("id", user.id)
+      .single();
+    const perfilData = perfil as { rol: string } | null;
+
+    if (request.nextUrl.pathname.startsWith("/profesional") && perfilData?.rol !== "profesional") {
+      return NextResponse.redirect(new URL("/paciente", request.url));
+    }
+
+    if (request.nextUrl.pathname.startsWith("/paciente") && perfilData?.rol === "profesional") {
+      return NextResponse.redirect(new URL("/profesional", request.url));
+    }
+  }
+
+  const isAuth = request.nextUrl.pathname === "/login" || request.nextUrl.pathname === "/register";
 
   if (isDashboard && !user) {
     return NextResponse.redirect(new URL("/login", request.url));
@@ -49,11 +65,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    "/login",
-    "/register",
-    "/dashboard",
-    "/profesional/:path*",
-    "/paciente/:path*",
-  ],
+  matcher: ["/login", "/register", "/dashboard", "/profesional/:path*", "/paciente/:path*"],
 };

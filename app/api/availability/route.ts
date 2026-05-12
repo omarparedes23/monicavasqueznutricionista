@@ -37,10 +37,7 @@ export async function GET(request: NextRequest) {
     .eq("activo", true);
 
   if (dispError) {
-    return NextResponse.json(
-      { error: "Error al cargar disponibilidad." },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Error al cargar disponibilidad." }, { status: 500 });
   }
 
   const { data: citas, error: citasError } = await supabase
@@ -52,10 +49,7 @@ export async function GET(request: NextRequest) {
     .lte("fecha_inicio", `${date}T23:59:59.999Z`);
 
   if (citasError) {
-    return NextResponse.json(
-      { error: "Error al verificar citas existentes." },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Error al verificar citas existentes." }, { status: 500 });
   }
 
   const slots = calcularSlotsDisponibles(
@@ -65,9 +59,7 @@ export async function GET(request: NextRequest) {
     config.duracion_cita_minutos
   );
 
-  const horariosDisponibles = slots
-    .filter((s) => s.disponible)
-    .map((s) => s.hora_inicio);
+  const horariosDisponibles = slots.filter((s) => s.disponible).map((s) => s.hora_inicio);
 
   return NextResponse.json(horariosDisponibles);
 }

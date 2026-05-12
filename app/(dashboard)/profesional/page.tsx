@@ -3,7 +3,9 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export default async function ProfesionalPage() {
   const supabase = await createServerSupabaseClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (!user) {
     redirect("/login");
@@ -23,26 +25,16 @@ export default async function ProfesionalPage() {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-2xl font-bold text-slate-900">
-        Panel del Profesional
-      </h1>
+      <h1 className="text-2xl font-bold text-slate-900">Panel del Profesional</h1>
 
-      <section className="bg-white rounded-2xl border border-slate-200 p-6">
-        <h2 className="text-lg font-semibold text-slate-800 mb-4">
-          Próximas citas
-        </h2>
-        <p className="text-sm text-slate-500">
-          Aquí se mostrará la lista de citas.
-        </p>
+      <section className="rounded-2xl border border-slate-200 bg-white p-6">
+        <h2 className="mb-4 text-lg font-semibold text-slate-800">Próximas citas</h2>
+        <p className="text-sm text-slate-500">Aquí se mostrará la lista de citas.</p>
       </section>
 
-      <section className="bg-white rounded-2xl border border-slate-200 p-6">
-        <h2 className="text-lg font-semibold text-slate-800 mb-4">
-          Crear paciente
-        </h2>
-        <p className="text-sm text-slate-500">
-          Formulario para crear una cuenta de paciente.
-        </p>
+      <section className="rounded-2xl border border-slate-200 bg-white p-6">
+        <h2 className="mb-4 text-lg font-semibold text-slate-800">Crear paciente</h2>
+        <p className="text-sm text-slate-500">Formulario para crear una cuenta de paciente.</p>
       </section>
     </div>
   );

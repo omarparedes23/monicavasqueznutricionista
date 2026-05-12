@@ -15,19 +15,12 @@ interface ModalProps {
 }
 
 const sizeClasses = {
-  sm:  "max-w-sm",
-  md:  "max-w-md",
-  lg:  "max-w-lg",
+  sm: "max-w-sm",
+  md: "max-w-md",
+  lg: "max-w-lg",
 };
 
-export function Modal({
-  open,
-  onClose,
-  title,
-  description,
-  children,
-  size = "md",
-}: ModalProps) {
+export function Modal({ open, onClose, title, description, children, size = "md" }: ModalProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
 
   // Cerrar con Escape
@@ -46,7 +39,9 @@ export function Modal({
     } else {
       document.body.style.overflow = "";
     }
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [open]);
 
   return (
@@ -66,7 +61,7 @@ export function Modal({
           />
 
           {/* Panel */}
-          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4">
             <motion.div
               initial={{ opacity: 0, y: 40, scale: 0.97 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -84,8 +79,8 @@ export function Modal({
               aria-labelledby={title ? "modal-title" : undefined}
             >
               {/* Handle bar (mobile) */}
-              <div className="sm:hidden flex justify-center pt-3 pb-1">
-                <div className="w-10 h-1 rounded-full bg-slate-200" />
+              <div className="flex justify-center pb-1 pt-3 sm:hidden">
+                <div className="h-1 w-10 rounded-full bg-slate-200" />
               </div>
 
               {/* Header */}
@@ -93,34 +88,27 @@ export function Modal({
                 <div className="flex items-start justify-between p-6 pb-4">
                   <div>
                     {title && (
-                      <h2
-                        id="modal-title"
-                        className="text-lg font-semibold text-slate-900"
-                      >
+                      <h2 id="modal-title" className="text-lg font-semibold text-slate-900">
                         {title}
                       </h2>
                     )}
-                    {description && (
-                      <p className="text-sm text-slate-500 mt-1">{description}</p>
-                    )}
+                    {description && <p className="mt-1 text-sm text-slate-500">{description}</p>}
                   </div>
                   <button
                     onClick={onClose}
                     className={cn(
-                      "p-1.5 rounded-lg text-slate-400 hover:text-slate-600",
-                      "hover:bg-slate-100 transition-colors -mt-1 -mr-1"
+                      "rounded-lg p-1.5 text-slate-400 hover:text-slate-600",
+                      "-mr-1 -mt-1 transition-colors hover:bg-slate-100"
                     )}
                     aria-label="Cerrar"
                   >
-                    <X className="w-5 h-5" />
+                    <X className="h-5 w-5" />
                   </button>
                 </div>
               )}
 
               {/* Content */}
-              <div className={cn(!title && !description && "pt-6", "px-6 pb-6")}>
-                {children}
-              </div>
+              <div className={cn(!title && !description && "pt-6", "px-6 pb-6")}>{children}</div>
             </motion.div>
           </div>
         </>

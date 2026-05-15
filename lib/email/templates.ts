@@ -57,12 +57,13 @@ export function emailBienvenidaPaciente(props: EmailBienvenidaPacienteProps): st
           <div class="detail-row">
             <span class="detail-icon">🔑</span>
             <div>
-              <div class="detail-label">Acceso</div>
+              <div class="detail-label">Activá tu cuenta</div>
               <div class="detail-value">
                 ${
                   props.magic_link
-                    ? `<a href="${props.magic_link}" class="btn">Ingresar con enlace mágico</a>`
-                    : `<p>Usá la opción "Enviar enlace mágico" en la página de <a href="/login" style="color:#16a34a;font-weight:600;">inicio de sesión</a>.</p>`
+                    ? `<a href="${props.magic_link}" class="btn">Crear mi contraseña</a>
+                       <p style="font-size:12px;color:#64748b;margin-top:10px;">Este enlace es de uso único y expira en 24 horas.</p>`
+                    : `<p>Contactá a tu nutricionista para recibir un nuevo enlace de activación.</p>`
                 }
               </div>
             </div>

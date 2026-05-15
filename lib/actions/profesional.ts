@@ -250,18 +250,22 @@ export async function crearPaciente(
     return { success: false, error: "Error al crear el perfil del paciente." };
   }
 
-  // 4. Generar magic link
+  // 4. Generar link de invitación (el paciente elige su contraseña al hacer clic)
   let magicLink: string | null = null;
   try {
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
     const { data: linkData, error: linkError } = await authAdmin.generateLink({
-      type: "magiclink",
+      type: "invite",
       email,
+      options: {
+        redirectTo: `${siteUrl}/auth/callback?next=/establecer-password`,
+      },
     });
     if (!linkError && linkData?.properties?.action_link) {
       magicLink = linkData.properties.action_link;
     }
   } catch (err) {
-    console.error("[crearPaciente] Error generando magic link:", err);
+    console.error("[crearPaciente] Error generando link de invitación:", err);
   }
 
   // 5. Enviar email de bienvenida (no bloquea)

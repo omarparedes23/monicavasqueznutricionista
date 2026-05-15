@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { signOut } from "@/lib/actions/auth";
+import { NavLink } from "@/components/dashboard/NavLink";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createServerSupabaseClient();
@@ -36,27 +36,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <nav className="flex-1 space-y-1 p-4">
           {isProfesional ? (
             <>
-              <Link
-                href="/profesional"
-                className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-              >
-                Panel Profesional
-              </Link>
-              <Link
-                href="/profesional/pacientes"
-                className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-              >
-                Pacientes
-              </Link>
+              <NavLink href="/profesional">Panel Profesional</NavLink>
+              <NavLink href="/profesional/pacientes">Pacientes</NavLink>
+              <NavLink href="/profesional/pacientes/nuevo">Nuevo Paciente</NavLink>
             </>
           ) : (
             <>
-              <Link
-                href="/paciente"
-                className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-              >
-                Mis Citas
-              </Link>
+              <NavLink href="/paciente">Mis Citas</NavLink>
             </>
           )}
         </nav>

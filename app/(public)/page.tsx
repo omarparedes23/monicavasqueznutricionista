@@ -11,6 +11,8 @@ import {
   Quote,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { getBlogPosts } from "@/lib/actions/blog";
+import { BlogCard } from "@/components/blog/BlogCard";
 
 /* ============================================================
    LANDING PAGE — Mónica Vásquez, Licenciada en Nutrición
@@ -61,7 +63,9 @@ const PASOS = [
   },
 ];
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const blogPosts = await getBlogPosts(3);
+
   return (
     <div className="w-full">
       {/* ==========================================================
@@ -273,43 +277,17 @@ export default function LandingPage() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-            {[
-              {
-                title: "¿Por qué las dietas restrictivas no funcionan?",
-                excerpt:
-                  "La ciencia detrás del efecto rebote y cómo construir hábitos que duren toda la vida.",
-                tag: "Hábitos",
-              },
-              {
-                title: "Guía práctica de porciones",
-                excerpt: "Aprende a medir tus porciones sin balanza ni cálculos complicados.",
-                tag: "Educación",
-              },
-              {
-                title: "Hidratación: más que solo agua",
-                excerpt:
-                  "Cuánto líquido necesitás realmente y cómo la hidratación afecta tu energía.",
-                tag: "Bienestar",
-              },
-            ].map((post, i) => (
-              <article
-                key={i}
-                className="group cursor-pointer rounded-2xl border border-slate-100 bg-white p-6 transition-all duration-200 hover:border-brand-200 hover:shadow-sm"
-              >
-                <div className="mb-4 flex items-center gap-2">
-                  <BookOpen className="h-4 w-4 text-brand-500" />
-                  <span className="rounded-full bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-600">
-                    {post.tag}
-                  </span>
-                </div>
-                <h3 className="mb-2 font-semibold text-slate-900 transition-colors group-hover:text-brand-700">
-                  {post.title}
-                </h3>
-                <p className="text-sm leading-relaxed text-slate-500">{post.excerpt}</p>
-              </article>
-            ))}
-          </div>
+          {blogPosts.length > 0 ? (
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+              {blogPosts.map((post) => (
+                <BlogCard key={post.id} post={post} />
+              ))}
+            </div>
+          ) : (
+            <div className="flex items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-white py-16">
+              <p className="text-sm text-slate-400">Próximamente — artículos de nutrición.</p>
+            </div>
+          )}
 
           <div className="mt-8 text-center md:hidden">
             <Link

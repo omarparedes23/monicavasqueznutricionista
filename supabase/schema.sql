@@ -132,6 +132,30 @@ CREATE TABLE IF NOT EXISTS nutri_planes (
 CREATE INDEX IF NOT EXISTS idx_nutri_planes_paciente ON nutri_planes (paciente_id);
 
 -- ============================================================
+-- TABLA: nutri_fotos
+-- ============================================================
+CREATE TABLE IF NOT EXISTS nutri_fotos (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  paciente_id UUID NOT NULL REFERENCES nutri_perfiles(id) ON DELETE CASCADE,
+  titulo TEXT NOT NULL,
+  descripcion TEXT,
+  r2_key TEXT NOT NULL,
+  activo BOOLEAN NOT NULL DEFAULT TRUE,
+  created_by UUID REFERENCES nutri_perfiles(id),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_nutri_fotos_paciente ON nutri_fotos (paciente_id);
+
+ALTER TABLE nutri_fotos ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Fotos all profesional"
+  ON nutri_fotos FOR ALL USING (
+    get_my_rol() = 'profesional'
+  );
+
+-- ============================================================
 -- TABLA: nutri_blog_posts
 -- ============================================================
 CREATE TABLE IF NOT EXISTS nutri_blog_posts (

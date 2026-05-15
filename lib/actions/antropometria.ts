@@ -67,6 +67,55 @@ export async function getMiUltimaMedicion(): Promise<Antropometria | null> {
   return data as Antropometria;
 }
 
+/**
+ * Registra una medición antropométrica para un paciente específico.
+ * Solo para uso del profesional — usa service role para saltear RLS.
+ */
+export async function addMedicionPorProfesional(
+  pacienteId: string,
+  formData: FormData
+): Promise<{ success: boolean; error?: string; data?: Antropometria }> {
+  const pesoRaw = formData.get("peso") as string;
+  const fecha = formData.get("fecha") as string;
+
+  const peso = parseFloat(pesoRaw);
+  if (isNaN(peso) || peso <= 0) {
+    return { success: false, error: "El peso es requerido y debe ser un número válido." };
+  }
+  if (!fecha || !/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+    return { success: false, error: "La fecha es requerida y debe tener formato YYYY-MM-DD." };
+  }
+
+  const grasaRaw = formData.get("porcentaje_grasa") as string;
+  const cinturaRaw = formData.get("cintura") as string;
+  const caderaRaw = formData.get("cadera") as string;
+  const notas = (formData.get("notas") as string) || null;
+
+  const supabase = createServiceRoleClient();
+  const db = supabase as any;
+
+  const { data, error } = await db
+    .from("nutri_antropometria")
+    .insert({
+      paciente_id: pacienteId,
+      peso,
+      porcentaje_grasa: grasaRaw ? parseFloat(grasaRaw) : null,
+      cintura: cinturaRaw ? parseFloat(cinturaRaw) : null,
+      cadera: caderaRaw ? parseFloat(caderaRaw) : null,
+      fecha,
+      notas,
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error("[addMedicionPorProfesional] Error:", error);
+    return { success: false, error: "Error al guardar la medición." };
+  }
+
+  return { success: true, data: data as Antropometria };
+}
+
 export interface AddMedicionInput {
   peso: number;
   porcentaje_grasa?: number;

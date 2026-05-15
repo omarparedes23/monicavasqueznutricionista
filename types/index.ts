@@ -84,6 +84,18 @@ export interface Plan {
   updated_at: string;
 }
 
+export interface Foto {
+  id: string;
+  paciente_id: string;
+  titulo: string;
+  descripcion: string | null;
+  r2_key: string;
+  activo: boolean;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface BlogPost {
   id: string;
   titulo: string;
@@ -106,6 +118,28 @@ export interface BlogPostCard {
   imagen_url: string | null;
   tags: string[] | null;
   published_at: string | null;
+}
+
+// ============================================================
+// TIPOS: Panel Profesional
+// ============================================================
+
+export interface CrearPacienteInput {
+  nombre: string;
+  email: string;
+  telefono?: string;
+  fecha_nacimiento?: string; // YYYY-MM-DD
+  historia_clinica?: string;
+}
+
+export interface PacienteConEmail extends Perfil {
+  email: string;
+  telefono: string;
+}
+
+export interface CitaProfesional extends Cita {
+  paciente_nombre: string;
+  paciente_email: string;
 }
 
 // ============================================================

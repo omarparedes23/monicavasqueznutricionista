@@ -1,5 +1,10 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
+import { Plus } from "lucide-react";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { getPacientes } from "@/lib/actions/profesional";
+import { PatientList } from "@/components/dashboard/PatientList";
+import { Button } from "@/components/ui/Button";
 
 export default async function PacientesPage() {
   const supabase = await createServerSupabaseClient();
@@ -9,23 +14,51 @@ export default async function PacientesPage() {
 
   if (!user) redirect("/login");
 
+  const { data: perfilRaw } = await supabase
+    .from("nutri_perfiles")
+    .select("rol")
+    .eq("id", user.id)
+    .single();
+  const perfil = perfilRaw as { rol: string } | null;
+
+  if (perfil?.rol !== "profesional") {
+    redirect("/paciente");
+  }
+
+  const pacientes = await getPacientes();
+
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-slate-900">Pacientes</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-slate-900">Pacientes</h1>
+        <Link href="/profesional/pacientes/nuevo">
+          <Button size="sm" leftIcon={<Plus className="h-4 w-4" />}>
+            Crear paciente
+          </Button>
+        </Link>
+      </div>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-6">
-        <h2 className="mb-4 text-lg font-semibold text-slate-800">Crear cuenta de paciente</h2>
-        <p className="text-sm text-slate-500">
-          Formulario para crear una cuenta de paciente. Próximamente.
-        </p>
-      </section>
+      {pacientes.length === 0 ? (
+        <EmptyState />
+      ) : (
+        <PatientList pacientes={pacientes} />
+      )}
+    </div>
+  );
+}
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-6">
-        <h2 className="mb-4 text-lg font-semibold text-slate-800">Lista de pacientes</h2>
-        <p className="text-sm text-slate-500">
-          Aquí se mostrará la lista de pacientes registrados. Próximamente.
-        </p>
-      </section>
+function EmptyState() {
+  return (
+    <div className="flex flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white py-16">
+      <p className="text-sm font-medium text-slate-600">No hay pacientes registrados</p>
+      <p className="mt-1 text-xs text-slate-400">
+        Creá el primero haciendo clic en "Crear paciente".
+      </p>
+      <Link href="/profesional/pacientes/nuevo" className="mt-4">
+        <Button size="sm" leftIcon={<Plus className="h-4 w-4" />}>
+          Crear paciente
+        </Button>
+      </Link>
     </div>
   );
 }

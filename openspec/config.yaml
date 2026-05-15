@@ -1,0 +1,51 @@
+schema: spec-driven
+
+context: |
+  Tech stack: Next.js 15 (App Router), TypeScript strict, React 19, Tailwind CSS v3
+  Database: Supabase (PostgreSQL + Storage), RLS + service role pattern
+  Auth: Supabase Auth (@supabase/ssr), roles via nutri_perfiles table
+  Email: Resend SDK, parallel sends with Promise.all
+  Validation: Zod, date-fns v4, Framer Motion, Recharts, react-markdown
+  Architecture: Route groups (public)/(auth)/(dashboard), Server Actions, Server Components
+  Storage: Supabase Storage (planes bucket) → migrating to Cloudflare R2 (monicanutricionista bucket)
+  Style: Prettier + prettier-plugin-tailwindcss, ESLint 9 + eslint-config-next
+
+strict_tdd: false
+
+testing:
+  strict_tdd: false
+  note: "No test runner detected. Strict TDD Mode unavailable."
+  test_runner: none
+  layers:
+    unit: unavailable
+    integration: unavailable
+    e2e: unavailable
+  coverage: unavailable
+  quality_tools:
+    linter: "next lint (eslint 9)"
+    type_checker: "tsc --noEmit"
+    formatter: "prettier --write ."
+
+rules:
+  proposal:
+    - Include rollback plan for risky changes (e.g. storage migration)
+    - Identify affected modules and Supabase tables
+  specs:
+    - Use Given/When/Then format for scenarios
+    - Use RFC 2119 keywords (MUST, SHALL, SHOULD, MAY)
+  design:
+    - Include sequence diagrams for complex flows (upload, auth, booking)
+    - Document architecture decisions with rationale
+  tasks:
+    - Group tasks by phase (infrastructure, implementation, UI)
+    - Use hierarchical numbering (1.1, 1.2, etc.)
+    - Keep tasks small enough to complete in one session
+  apply:
+    - Follow existing Server Action pattern (lib/actions/*.ts)
+    - Use service role for professional writes, RLS for patient reads
+    - Cloudflare R2 SDK (@aws-sdk/client-s3) for all file uploads
+  verify:
+    - Run tsc --noEmit and next lint after each change
+    - Compare implementation against every spec scenario
+  archive:
+    - Warn before merging destructive deltas (large removals)

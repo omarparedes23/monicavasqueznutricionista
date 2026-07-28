@@ -295,8 +295,14 @@ CREATE POLICY "Citas UPDATE profesional"
 
 -- ============================================================
 -- TRIGGER: auto-insert perfil en auth.users
+-- NOTA: la función se llama nutri_handle_new_user (prefijada)
+-- porque esta instancia de Supabase es COMPARTIDA con otros
+-- proyectos (kleiner_*, uniks_*). La función genérica
+-- "handle_new_user" fue sobrescrita por kleinerfeigling
+-- (inserta en kleiner_profiles) y rompía la creación de citas
+-- (ver fix-trigger-new-user.sql).
 -- ============================================================
-CREATE OR REPLACE FUNCTION public.handle_new_user()
+CREATE OR REPLACE FUNCTION public.nutri_handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
   INSERT INTO public.nutri_perfiles (id, nombre, rol)
@@ -306,11 +312,11 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+DROP TRIGGER IF EXISTS on_auth_user_created_nutri ON auth.users;
 
-CREATE TRIGGER on_auth_user_created
+CREATE TRIGGER on_auth_user_created_nutri
   AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+  FOR EACH ROW EXECUTE FUNCTION public.nutri_handle_new_user();
 
 -- ============================================================
 -- DATOS INICIALES (seed)

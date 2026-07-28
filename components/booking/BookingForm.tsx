@@ -129,7 +129,7 @@ export function BookingForm({ fecha, slot, onSuccess, onBack }: BookingFormProps
         <Input
           label="Teléfono"
           type="tel"
-          placeholder="+54 11 1234-5678"
+          placeholder="+51 912 345 678"
           value={telefono}
           onChange={(e) => {
             setTelefono(e.target.value);

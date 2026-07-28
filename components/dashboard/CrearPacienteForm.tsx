@@ -38,7 +38,7 @@ export function CrearPacienteForm() {
         label="Teléfono (opcional)"
         name="telefono"
         type="tel"
-        placeholder="+54 9 11 1234 5678"
+        placeholder="+51 912 345 678"
       />
 
       <Input

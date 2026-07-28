@@ -121,6 +121,25 @@ export interface BlogPostCard {
 }
 
 // ============================================================
+// TIPOS: Tienda online (catálogo + WhatsApp)
+// ============================================================
+
+export interface Producto {
+  id: string;
+  nombre: string;
+  slug: string;
+  descripcion: string | null;
+  descripcion_larga: string | null;
+  precio: number;
+  categoria: string;
+  imagen_url: string | null;
+  mostrar_en_tienda: boolean;
+  orden: number;
+  created_at: string;
+  updated_at: string;
+}
+
+// ============================================================
 // TIPOS: Panel Profesional
 // ============================================================
 
@@ -451,6 +470,51 @@ export type Database = {
           tags?: string[];
           published?: boolean;
           published_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      nutri_productos: {
+        Row: {
+          id: string;
+          nombre: string;
+          slug: string;
+          descripcion: string | null;
+          descripcion_larga: string | null;
+          precio: number;
+          categoria: string;
+          imagen_url: string | null;
+          mostrar_en_tienda: boolean;
+          orden: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          nombre: string;
+          slug: string;
+          descripcion?: string | null;
+          descripcion_larga?: string | null;
+          precio: number;
+          categoria: string;
+          imagen_url?: string | null;
+          mostrar_en_tienda?: boolean;
+          orden?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          nombre?: string;
+          slug?: string;
+          descripcion?: string | null;
+          descripcion_larga?: string | null;
+          precio?: number;
+          categoria?: string;
+          imagen_url?: string | null;
+          mostrar_en_tienda?: boolean;
+          orden?: number;
           created_at?: string;
           updated_at?: string;
         };

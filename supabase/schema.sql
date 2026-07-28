@@ -176,8 +176,13 @@ CREATE INDEX IF NOT EXISTS idx_nutri_blog_posts_published ON nutri_blog_posts (p
 
 -- ============================================================
 -- TRIGGER: updated_at automático
+-- NOTA: la función se llama nutri_set_updated_at (prefijada)
+-- porque esta instancia de Supabase es COMPARTIDA con otros
+-- proyectos (kleiner_*, uniks_*). Una función genérica
+-- "trigger_set_updated_at" fue sobrescrita por otro proyecto
+-- y rompió los UPDATE de nutri_* (ver fix-trigger-updated-at.sql).
 -- ============================================================
-CREATE OR REPLACE FUNCTION trigger_set_updated_at()
+CREATE OR REPLACE FUNCTION nutri_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
   NEW.updated_at = NOW();
@@ -187,27 +192,27 @@ $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER set_updated_at_nutri_profesional_config
   BEFORE UPDATE ON nutri_profesional_config
-  FOR EACH ROW EXECUTE FUNCTION trigger_set_updated_at();
+  FOR EACH ROW EXECUTE FUNCTION nutri_set_updated_at();
 
 CREATE TRIGGER set_updated_at_nutri_citas
   BEFORE UPDATE ON nutri_citas
-  FOR EACH ROW EXECUTE FUNCTION trigger_set_updated_at();
+  FOR EACH ROW EXECUTE FUNCTION nutri_set_updated_at();
 
 CREATE TRIGGER set_updated_at_nutri_perfiles
   BEFORE UPDATE ON nutri_perfiles
-  FOR EACH ROW EXECUTE FUNCTION trigger_set_updated_at();
+  FOR EACH ROW EXECUTE FUNCTION nutri_set_updated_at();
 
 CREATE TRIGGER set_updated_at_nutri_antropometria
   BEFORE UPDATE ON nutri_antropometria
-  FOR EACH ROW EXECUTE FUNCTION trigger_set_updated_at();
+  FOR EACH ROW EXECUTE FUNCTION nutri_set_updated_at();
 
 CREATE TRIGGER set_updated_at_nutri_planes
   BEFORE UPDATE ON nutri_planes
-  FOR EACH ROW EXECUTE FUNCTION trigger_set_updated_at();
+  FOR EACH ROW EXECUTE FUNCTION nutri_set_updated_at();
 
 CREATE TRIGGER set_updated_at_nutri_blog_posts
   BEFORE UPDATE ON nutri_blog_posts
-  FOR EACH ROW EXECUTE FUNCTION trigger_set_updated_at();
+  FOR EACH ROW EXECUTE FUNCTION nutri_set_updated_at();
 
 -- ============================================================
 -- ROW LEVEL SECURITY (RLS)

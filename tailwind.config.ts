@@ -29,6 +29,8 @@ const config: Config = {
       animation: {
         "fade-in": "fadeIn 0.3s ease-in-out",
         "slide-up": "slideUp 0.4s ease-out",
+        "float": "float 5s ease-in-out infinite",
+        "pulse-glow": "pulseGlow 2.5s ease-in-out infinite",
       },
       keyframes: {
         fadeIn: {
@@ -38,6 +40,14 @@ const config: Config = {
         slideUp: {
           "0%": { opacity: "0", transform: "translateY(16px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        float: {
+          "0%, 100%": { transform: "translateY(0px)" },
+          "50%": { transform: "translateY(-8px)" },
+        },
+        pulseGlow: {
+          "0%, 100%": { opacity: "1", transform: "scale(1)" },
+          "50%": { opacity: "0.85", transform: "scale(1.03)" },
         },
       },
     },

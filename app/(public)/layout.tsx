@@ -30,6 +30,14 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
         <p className="mt-2 text-xs text-slate-400">
           © {new Date().getFullYear()} Mónica Vásquez · Licenciada en Nutrición · Sistema de turnos online
         </p>
+        <p className="mt-3">
+          <a
+            href="/login"
+            className="text-[0.65rem] text-slate-300/30 transition-colors hover:text-slate-400/60"
+          >
+            Administración
+          </a>
+        </p>
       </footer>
     </div>
   );

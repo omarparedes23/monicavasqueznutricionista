@@ -5,6 +5,7 @@ import { ArrowLeft, Leaf } from "lucide-react";
 import type { Metadata } from "next";
 import { getProductos, getProductoBySlug } from "@/lib/actions/tienda";
 import { formatPrecio, getWhatsAppProductoUrl } from "@/lib/utils/whatsapp";
+import { absoluteUrl } from "@/lib/utils/site";
 import { WhatsAppButton } from "@/components/tienda/WhatsAppButton";
 
 export const revalidate = 3600;
@@ -27,14 +28,27 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const description =
     producto.descripcion ??
     `${producto.nombre} — producto natural disponible en la tienda de Mónica Vásquez Nutrición.`;
+  const url = absoluteUrl(`/tienda/${producto.slug}`);
 
   return {
     title: `${producto.nombre} — Tienda | Mónica Vásquez Nutrición`,
     description,
+    alternates: { canonical: url },
     openGraph: {
       title: producto.nombre,
       description,
-      ...(producto.imagen_url ? { images: [{ url: producto.imagen_url }] } : {}),
+      url,
+      type: "website",
+      siteName: "Mónica Vásquez Nutrición",
+      ...(producto.imagen_url
+        ? { images: [{ url: producto.imagen_url, alt: producto.nombre }] }
+        : {}),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: producto.nombre,
+      description,
+      ...(producto.imagen_url ? { images: [producto.imagen_url] } : {}),
     },
   };
 }
@@ -48,9 +62,52 @@ export default async function ProductoPage({ params }: Props) {
   }
 
   const waUrl = getWhatsAppProductoUrl(producto.nombre, producto.precio);
+  const url = absoluteUrl(`/tienda/${producto.slug}`);
+
+  // JSON-LD: schema.org Product (rich snippets de Google con precio e imagen)
+  const productoJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: producto.nombre,
+    description: producto.descripcion_larga ?? producto.descripcion ?? producto.nombre,
+    ...(producto.imagen_url ? { image: [producto.imagen_url] } : {}),
+    sku: producto.slug,
+    category: producto.categoria,
+    brand: { "@type": "Brand", name: "Mónica Vásquez Nutrición" },
+    offers: {
+      "@type": "Offer",
+      url,
+      price: producto.precio,
+      priceCurrency: "PEN",
+      // La compra se concreta por WhatsApp: el producto está disponible para consulta/orden
+      availability: "https://schema.org/InStock",
+      seller: { "@type": "Organization", name: "Mónica Vásquez Nutrición" },
+    },
+  };
+
+  // JSON-LD: breadcrumbs
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Inicio", item: absoluteUrl("/") },
+      { "@type": "ListItem", position: 2, name: "Tienda", item: absoluteUrl("/tienda") },
+      { "@type": "ListItem", position: 3, name: producto.nombre, item: url },
+    ],
+  };
 
   return (
     <article className="w-full max-w-4xl">
+      {/* Structured data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productoJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+
       {/* Back link */}
       <Link
         href="/tienda"

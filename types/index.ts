@@ -436,6 +436,42 @@ export type Database = {
         };
         Relationships: [];
       };
+      nutri_fotos: {
+        Row: {
+          id: string;
+          paciente_id: string;
+          titulo: string;
+          descripcion: string | null;
+          r2_key: string;
+          activo: boolean;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          paciente_id: string;
+          titulo: string;
+          descripcion?: string | null;
+          r2_key: string;
+          activo?: boolean;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          paciente_id?: string;
+          titulo?: string;
+          descripcion?: string | null;
+          r2_key?: string;
+          activo?: boolean;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       nutri_blog_posts: {
         Row: {
           id: string;

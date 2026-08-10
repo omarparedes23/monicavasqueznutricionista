@@ -1,22 +1,55 @@
+import type { Metadata } from "next";
 import { ShoppingBag } from "lucide-react";
 import { getProductos } from "@/lib/actions/tienda";
 import { TiendaGrid } from "@/components/tienda/TiendaGrid";
 import { WhatsAppButton } from "@/components/tienda/WhatsAppButton";
 import { WHATSAPP_NUMBER } from "@/lib/utils/whatsapp";
+import { absoluteUrl } from "@/lib/utils/site";
 
 export const revalidate = 3600;
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Tienda — Mónica Vásquez Nutrición",
   description:
     "Productos naturales seleccionados por tu nutricionista: proteínas, vitaminas, tés e infusiones y snacks saludables. Consultá y comprá por WhatsApp.",
+  alternates: { canonical: absoluteUrl("/tienda") },
+  openGraph: {
+    title: "Tienda — Mónica Vásquez Nutrición",
+    description:
+      "Productos naturales seleccionados por tu nutricionista. Consultá y comprá por WhatsApp.",
+    url: absoluteUrl("/tienda"),
+    type: "website",
+    siteName: "Mónica Vásquez Nutrición",
+  },
 };
 
 export default async function TiendaPage() {
   const productos = await getProductos();
 
+  // JSON-LD: schema.org ItemList con todos los productos de la tienda
+  const itemListJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: "Productos para tu bienestar — Mónica Vásquez Nutrición",
+    itemListElement: productos.map((p, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: p.nombre,
+      url: absoluteUrl(`/tienda/${p.slug}`),
+      ...(p.imagen_url ? { image: p.imagen_url } : {}),
+    })),
+  };
+
   return (
     <div className="w-full max-w-6xl">
+      {/* Structured data */}
+      {productos.length > 0 && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
+        />
+      )}
+
       {/* Header */}
       <div className="mb-12 text-center">
         <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-brand-100 bg-brand-50 px-4 py-1.5 text-sm font-medium text-brand-700">

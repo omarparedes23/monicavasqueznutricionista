@@ -3,6 +3,7 @@
 import { PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { createServerSupabaseClient, createServiceRoleClient } from "@/lib/supabase/server";
+import { guardProfesional } from "@/lib/actions/guard";
 import { r2Client, R2_BUCKET } from "@/lib/r2/client";
 import type { Plan } from "@/types";
 
@@ -32,6 +33,9 @@ export async function getMisPlanes(): Promise<Plan[]> {
  * Usa service role para el profesional.
  */
 export async function getPlanesPaciente(pacienteId: string): Promise<Plan[]> {
+  const guard = await guardProfesional();
+  if (!guard.ok) return [];
+
   const supabase = createServiceRoleClient();
 
   const { data, error } = await supabase
@@ -60,8 +64,7 @@ export async function getPlanSignedUrl(planId: string): Promise<string | null> {
   const { data: user } = await supabase.auth.getUser();
   if (!user.user) return null;
 
-  const db = serviceClient as any;
-  const { data: plan } = await db
+  const { data: plan } = await serviceClient
     .from("nutri_planes")
     .select("id, file_url, paciente_id")
     .eq("id", planId)
@@ -69,15 +72,9 @@ export async function getPlanSignedUrl(planId: string): Promise<string | null> {
 
   if (!plan?.file_url) return null;
 
-  const { data: perfil } = await db
-    .from("nutri_perfiles")
-    .select("rol")
-    .eq("id", user.user.id)
-    .single();
-
-  const isProfesional = perfil?.rol === "profesional";
+  const guard = await guardProfesional();
   const isOwner = plan.paciente_id === user.user.id;
-  if (!isProfesional && !isOwner) return null;
+  if (!guard.ok && !isOwner) return null;
 
   // R2 (nuevos archivos)
   if (plan.file_url.startsWith("pacientes/")) {
@@ -111,6 +108,9 @@ export async function subirPlanProfesional(
   pacienteId: string,
   formData: FormData
 ): Promise<{ success: boolean; error?: string; data?: Plan }> {
+  const guard = await guardProfesional();
+  if (!guard.ok) return { success: false, error: guard.error };
+
   const titulo = (formData.get("titulo") as string)?.trim();
   const descripcion = (formData.get("descripcion") as string)?.trim() || undefined;
   const file = formData.get("file") as File | null;
@@ -163,9 +163,8 @@ export interface CreatePlanInput {
  */
 export async function createPlanRecord(input: CreatePlanInput): Promise<Plan | null> {
   const supabase = createServiceRoleClient();
-  const db = supabase as any;
 
-  const { data, error } = await db
+  const { data, error } = await supabase
     .from("nutri_planes")
     .insert({
       paciente_id: input.pacienteId,

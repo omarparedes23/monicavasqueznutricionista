@@ -131,7 +131,9 @@ export function getFechasDisponiblesDelMes(
         diasConDisp.add(format(cursor, "yyyy-MM-dd"));
       }
     }
-    cursor = new Date(cursor.getTime() + 24 * 60 * 60 * 1000);
+    // setDate(+1) en vez de sumar 24h en ms: respeta los cambios de horario
+    // (DST) y no saltea el último día del mes.
+    cursor.setDate(cursor.getDate() + 1);
   }
 
   return diasConDisp;

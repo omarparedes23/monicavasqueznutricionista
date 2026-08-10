@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { addMinutes, format } from "date-fns";
 import { createServiceRoleClient } from "@/lib/supabase/server";
+import { esProfesionalAutorizado } from "@/lib/auth/api";
 import { calcularSlotsDisponibles } from "@/lib/utils/slots";
 import { buildTimestamp } from "@/lib/utils/dates";
 import { sendEmail } from "@/lib/email/resend";
@@ -18,8 +19,13 @@ const RescheduleSchema = z.object({
 /**
  * DELETE /api/appointments/[id]
  * Cancela (soft-delete) una cita existente.
+ * Requiere autenticación de profesional (sesión o service role key como Bearer).
  */
-export async function DELETE(_request: NextRequest, { params }: RouteParams) {
+export async function DELETE(request: NextRequest, { params }: RouteParams) {
+  if (!(await esProfesionalAutorizado(request))) {
+    return NextResponse.json({ error: "No autorizado." }, { status: 401 });
+  }
+
   const { id } = await params;
 
   const supabase = createServiceRoleClient();
@@ -58,6 +64,10 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
  */
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
   try {
+    if (!(await esProfesionalAutorizado(request))) {
+      return NextResponse.json({ error: "No autorizado." }, { status: 401 });
+    }
+
     const { id } = await params;
 
     let body: unknown;

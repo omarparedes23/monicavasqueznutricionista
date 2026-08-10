@@ -1,7 +1,9 @@
 "use server";
 
 import { createServerSupabaseClient, createServiceRoleClient } from "@/lib/supabase/server";
-import type { Antropometria } from "@/types";
+import { guardProfesional } from "@/lib/actions/guard";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Antropometria, Database } from "@/types";
 
 /**
  * Obtiene el historial de antropometría del paciente autenticado.
@@ -28,6 +30,9 @@ export async function getMiHistorial(): Promise<Antropometria[]> {
  * Usa service role para que el profesional pueda ver cualquier paciente.
  */
 export async function getHistorialPaciente(pacienteId: string): Promise<Antropometria[]> {
+  const guard = await guardProfesional();
+  if (!guard.ok) return [];
+
   const supabase = createServiceRoleClient();
 
   const { data, error } = await supabase
@@ -75,6 +80,9 @@ export async function addMedicionPorProfesional(
   pacienteId: string,
   formData: FormData
 ): Promise<{ success: boolean; error?: string; data?: Antropometria }> {
+  const guard = await guardProfesional();
+  if (!guard.ok) return { success: false, error: guard.error };
+
   const pesoRaw = formData.get("peso") as string;
   const fecha = formData.get("fecha") as string;
 
@@ -92,9 +100,8 @@ export async function addMedicionPorProfesional(
   const notas = (formData.get("notas") as string) || null;
 
   const supabase = createServiceRoleClient();
-  const db = supabase as any;
 
-  const { data, error } = await db
+  const { data, error } = await supabase
     .from("nutri_antropometria")
     .insert({
       paciente_id: pacienteId,
@@ -146,10 +153,10 @@ export async function addMedicion(input: AddMedicionInput): Promise<AddMedicionR
     return { success: false, error: "No autenticado" };
   }
 
-  // @supabase/ssr v0.6.1 + supabase-js v2.99.x type incompatibility — cast to any
-  const db = supabase as any;
-
-  const { data, error } = await db
+  // @supabase/ssr v0.6.1 + supabase-js v2.99.x: el `.insert()` del cliente ssr
+  // resuelve los valores a `never` con tipos custom (incompatibilidad conocida).
+  // Cast puntual y tipado a SupabaseClient<Database> (misma resolución que createClient).
+  const { data, error } = await (supabase as unknown as SupabaseClient<Database>)
     .from("nutri_antropometria")
     .insert({
       paciente_id: user.id,

@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { createServiceRoleClient } from "@/lib/supabase/server";
+import { guardProfesional } from "@/lib/actions/guard";
 import { sendEmail } from "@/lib/email/resend";
 import { emailBienvenidaPaciente } from "@/lib/email/templates";
 import type { ActionResult, Cita, PacienteConEmail } from "@/types";
@@ -26,12 +27,14 @@ const CrearPacienteSchema = z.object({
  * Ordenadas por fecha_inicio ASC.
  */
 export async function getCitasProfesional(): Promise<Cita[]> {
+  const guard = await guardProfesional();
+  if (!guard.ok) return [];
+
   const supabase = createServiceRoleClient();
-  const db = supabase as any;
 
   const now = new Date().toISOString();
 
-  const { data, error } = await db
+  const { data, error } = await supabase
     .from("nutri_citas")
     .select("*")
     .eq("estado", "confirmada")
@@ -51,10 +54,12 @@ export async function getCitasProfesional(): Promise<Cita[]> {
  * Ordenadas por fecha_inicio DESC.
  */
 export async function getCitasPaciente(pacienteId: string): Promise<Cita[]> {
-  const supabase = createServiceRoleClient();
-  const db = supabase as any;
+  const guard = await guardProfesional();
+  if (!guard.ok) return [];
 
-  const { data, error } = await db
+  const supabase = createServiceRoleClient();
+
+  const { data, error } = await supabase
     .from("nutri_citas")
     .select("*")
     .eq("paciente_id", pacienteId)
@@ -73,10 +78,12 @@ export async function getCitasPaciente(pacienteId: string): Promise<Cita[]> {
  * Realiza un join en memoria entre nutri_perfiles y auth.users.
  */
 export async function getPacientes(): Promise<PacienteConEmail[]> {
-  const supabase = createServiceRoleClient();
-  const db = supabase as any;
+  const guard = await guardProfesional();
+  if (!guard.ok) return [];
 
-  const { data: perfiles, error: perfilesError } = await db
+  const supabase = createServiceRoleClient();
+
+  const { data: perfiles, error: perfilesError } = await supabase
     .from("nutri_perfiles")
     .select("*")
     .eq("rol", "paciente")
@@ -92,7 +99,7 @@ export async function getPacientes(): Promise<PacienteConEmail[]> {
 
   // Obtener emails y teléfonos desde auth.users
   try {
-    const authAdmin = db.auth.admin;
+    const authAdmin = (supabase as any).auth.admin;
     const { data: usersData, error: usersError } = await authAdmin.listUsers({
       perPage: 1000,
     });
@@ -132,10 +139,12 @@ export async function getPacientes(): Promise<PacienteConEmail[]> {
  * Obtiene un paciente por ID con email y teléfono.
  */
 export async function getPacienteById(id: string): Promise<PacienteConEmail | null> {
-  const supabase = createServiceRoleClient();
-  const db = supabase as any;
+  const guard = await guardProfesional();
+  if (!guard.ok) return null;
 
-  const { data: perfil, error: perfilError } = await db
+  const supabase = createServiceRoleClient();
+
+  const { data: perfil, error: perfilError } = await supabase
     .from("nutri_perfiles")
     .select("*")
     .eq("id", id)
@@ -148,7 +157,7 @@ export async function getPacienteById(id: string): Promise<PacienteConEmail | nu
   }
 
   try {
-    const authAdmin = db.auth.admin;
+    const authAdmin = (supabase as any).auth.admin;
     const { data: userData, error: userError } = await authAdmin.getUserById(id);
 
     if (userError || !userData?.user) {
@@ -206,9 +215,11 @@ export async function crearPaciente(
 
   const { nombre, email, telefono, fecha_nacimiento, historia_clinica } = parsed.data;
 
+  const guard = await guardProfesional();
+  if (!guard.ok) return { success: false, error: guard.error ?? "No autorizado." };
+
   const supabase = createServiceRoleClient();
-  const db = supabase as any;
-  const authAdmin = db.auth.admin;
+  const authAdmin = (supabase as any).auth.admin;
 
   // 1. Crear auth user (createUser falla con error descriptivo si el email ya existe)
   const { data: createData, error: createError } = await authAdmin.createUser({
@@ -231,7 +242,7 @@ export async function crearPaciente(
 
   // 2. UPSERT nutri_perfiles — el trigger on_auth_user_created ya insertó la fila base;
   //    actualizamos con los datos completos del formulario.
-  const { error: upsertError } = await db.from("nutri_perfiles").upsert({
+  const { error: upsertError } = await supabase.from("nutri_perfiles").upsert({
     id: userId,
     nombre,
     fecha_nacimiento: fecha_nacimiento ?? null,
@@ -270,7 +281,7 @@ export async function crearPaciente(
 
   // 5. Enviar email de bienvenida (no bloquea)
   try {
-    const { data: configData } = await db
+    const { data: configData } = await supabase
       .from("nutri_profesional_config")
       .select("nombre")
       .limit(1)

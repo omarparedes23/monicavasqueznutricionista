@@ -9,9 +9,8 @@ import type { BlogPost } from "@/types";
  */
 export async function getBlogPosts(limit?: number): Promise<BlogPost[]> {
   const supabase = createServiceRoleClient();
-  const db = supabase as any;
 
-  let query = db
+  let query = supabase
     .from("nutri_blog_posts")
     .select("*")
     .eq("published", true)
@@ -38,9 +37,8 @@ export async function getBlogPosts(limit?: number): Promise<BlogPost[]> {
  */
 export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> {
   const supabase = createServiceRoleClient();
-  const db = supabase as any;
 
-  const { data, error } = await db
+  const { data, error } = await supabase
     .from("nutri_blog_posts")
     .select("*")
     .eq("slug", slug)

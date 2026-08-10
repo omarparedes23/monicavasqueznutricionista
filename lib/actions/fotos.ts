@@ -2,7 +2,8 @@
 
 import { PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { createServerSupabaseClient, createServiceRoleClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/server";
+import { guardProfesional } from "@/lib/actions/guard";
 import { r2Client, R2_BUCKET } from "@/lib/r2/client";
 import type { Foto } from "@/types";
 
@@ -17,6 +18,9 @@ export async function subirFotoProfesional(
   pacienteId: string,
   formData: FormData
 ): Promise<{ success: boolean; error?: string; data?: Foto }> {
+  const guard = await guardProfesional();
+  if (!guard.ok) return { success: false, error: guard.error };
+
   const titulo = (formData.get("titulo") as string)?.trim();
   const descripcion = (formData.get("descripcion") as string)?.trim() || undefined;
   const file = formData.get("file") as File | null;
@@ -49,9 +53,8 @@ export async function subirFotoProfesional(
   }
 
   const supabase = createServiceRoleClient();
-  const db = supabase as any;
 
-  const { data: foto, error: insertError } = await db
+  const { data: foto, error: insertError } = await supabase
     .from("nutri_fotos")
     .insert({
       paciente_id: pacienteId,
@@ -76,10 +79,12 @@ export async function subirFotoProfesional(
  * Usa service role para el profesional.
  */
 export async function getFotosPaciente(pacienteId: string): Promise<Foto[]> {
-  const supabase = createServiceRoleClient();
-  const db = supabase as any;
+  const guard = await guardProfesional();
+  if (!guard.ok) return [];
 
-  const { data, error } = await db
+  const supabase = createServiceRoleClient();
+
+  const { data, error } = await supabase
     .from("nutri_fotos")
     .select("*")
     .eq("paciente_id", pacienteId)
@@ -99,22 +104,12 @@ export async function getFotosPaciente(pacienteId: string): Promise<Foto[]> {
  * Verifica que el solicitante sea profesional antes de firmar.
  */
 export async function getFotoSignedUrl(fotoId: string): Promise<string | null> {
-  const supabase = await createServerSupabaseClient();
+  const guard = await guardProfesional();
+  if (!guard.ok) return null;
+
   const serviceClient = createServiceRoleClient();
-  const db = serviceClient as any;
 
-  const { data: user } = await supabase.auth.getUser();
-  if (!user.user) return null;
-
-  const { data: perfil } = await db
-    .from("nutri_perfiles")
-    .select("rol")
-    .eq("id", user.user.id)
-    .single();
-
-  if (perfil?.rol !== "profesional") return null;
-
-  const { data: foto } = await db
+  const { data: foto } = await serviceClient
     .from("nutri_fotos")
     .select("id, r2_key")
     .eq("id", fotoId)

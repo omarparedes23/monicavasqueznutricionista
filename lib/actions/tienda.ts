@@ -4,10 +4,8 @@ import { revalidatePath } from "next/cache";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import sharp from "sharp";
 import { z } from "zod";
-import {
-  createServerSupabaseClient,
-  createServiceRoleClient,
-} from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/server";
+import { guardProfesional } from "@/lib/actions/guard";
 import {
   r2Client,
   R2_PUBLIC_BUCKET,
@@ -44,28 +42,6 @@ const ALLOWED_MIME = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 const MAX_SIZE = 3 * 1024 * 1024; // 3MB
 const MAX_EDGE = 1200;
 
-async function guardProfesional(): Promise<{ ok: boolean; error?: string }> {
-  const supabase = await createServerSupabaseClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) return { ok: false, error: "No autenticado." };
-
-  const service = createServiceRoleClient() as any;
-  const { data: perfil } = await service
-    .from("nutri_perfiles")
-    .select("rol")
-    .eq("id", user.id)
-    .single();
-
-  if (perfil?.rol !== "profesional") {
-    return { ok: false, error: "No autorizado." };
-  }
-
-  return { ok: true };
-}
-
 /**
  * Obtiene los productos visibles en la tienda, ordenados por `orden`
  * y luego alfabéticamente. El filtro de categorías se hace en el cliente
@@ -73,9 +49,8 @@ async function guardProfesional(): Promise<{ ok: boolean; error?: string }> {
  */
 export async function getProductos(): Promise<Producto[]> {
   const supabase = createServiceRoleClient();
-  const db = supabase as any;
 
-  const { data, error } = await db
+  const { data, error } = await supabase
     .from("nutri_productos")
     .select("*")
     .eq("mostrar_en_tienda", true)
@@ -96,9 +71,8 @@ export async function getProductos(): Promise<Producto[]> {
  */
 export async function getProductoBySlug(slug: string): Promise<Producto | null> {
   const supabase = createServiceRoleClient();
-  const db = supabase as any;
 
-  const { data, error } = await db
+  const { data, error } = await supabase
     .from("nutri_productos")
     .select("*")
     .eq("slug", slug)
@@ -121,9 +95,8 @@ export async function getProductoBySlug(slug: string): Promise<Producto | null> 
  */
 export async function getProductosAdmin(): Promise<Producto[]> {
   const supabase = createServiceRoleClient();
-  const db = supabase as any;
 
-  const { data, error } = await db
+  const { data, error } = await supabase
     .from("nutri_productos")
     .select("*")
     .order("orden", { ascending: true })
@@ -171,9 +144,8 @@ export async function subirImagenProducto(
   }
 
   const supabase = createServiceRoleClient();
-  const db = supabase as any;
 
-  const { data: producto, error: getError } = await db
+  const { data: producto, error: getError } = await supabase
     .from("nutri_productos")
     .select("id, slug, imagen_url")
     .eq("id", productoId)
@@ -220,7 +192,7 @@ export async function subirImagenProducto(
   }
 
   // Actualizar la BD (antes de borrar el objeto viejo para no romper la imagen actual si falla)
-  const { error: updateError } = await db
+  const { error: updateError } = await supabase
     .from("nutri_productos")
     .update({ imagen_url: nuevaUrl })
     .eq("id", productoId);
@@ -254,9 +226,8 @@ export async function eliminarImagenProducto(productoId: string): Promise<Result
   if (!guard.ok) return { success: false, error: guard.error };
 
   const supabase = createServiceRoleClient();
-  const db = supabase as any;
 
-  const { data: producto, error: getError } = await db
+  const { data: producto, error: getError } = await supabase
     .from("nutri_productos")
     .select("id, imagen_url")
     .eq("id", productoId)
@@ -275,7 +246,7 @@ export async function eliminarImagenProducto(productoId: string): Promise<Result
     await deleteObject(R2_PUBLIC_BUCKET, key);
   }
 
-  const { error: updateError } = await db
+  const { error: updateError } = await supabase
     .from("nutri_productos")
     .update({ imagen_url: null })
     .eq("id", productoId);
@@ -320,9 +291,8 @@ export async function actualizarProducto(
   const data = parsed.data;
 
   const supabase = createServiceRoleClient();
-  const db = supabase as any;
 
-  const { error } = await db
+  const { error } = await supabase
     .from("nutri_productos")
     .update({
       nombre: data.nombre.trim(),
@@ -381,23 +351,22 @@ export async function crearProducto(formData: FormData): Promise<ResultadoAccion
 
   const data = parsed.data;
   const supabase = createServiceRoleClient();
-  const db = supabase as any;
 
   // Generar slug único
   const baseSlug = slugify(data.nombre) || "producto";
-  const { data: existentes } = await db
+  const { data: existentes } = await supabase
     .from("nutri_productos")
     .select("slug")
     .ilike("slug", `${baseSlug}%`);
 
-  const usados = new Set((existentes ?? []).map((p: any) => p.slug));
+  const usados = new Set((existentes ?? []).map((p) => p.slug));
   let slug = baseSlug;
   let contador = 2;
   while (usados.has(slug)) {
     slug = `${baseSlug}-${contador++}`;
   }
 
-  const { data: nuevo, error } = await db
+  const { data: nuevo, error } = await supabase
     .from("nutri_productos")
     .insert({
       nombre: data.nombre.trim(),

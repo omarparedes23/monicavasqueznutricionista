@@ -3,6 +3,7 @@
 // ============================================================
 
 import type { NextRequest } from "next/server";
+import { timingSafeEqual } from "crypto";
 import { createServerSupabaseClient, createServiceRoleClient } from "@/lib/supabase/server";
 
 /**
@@ -10,8 +11,9 @@ import { createServerSupabaseClient, createServiceRoleClient } from "@/lib/supab
  *
  * Acepta dos mecanismos:
  * 1. **Sesión de usuario** con rol "profesional" (cookies del navegador).
- * 2. **Service role key** como `Authorization: Bearer <key>` — para
- *    integraciones externas (bot de Rust) que no usan navegador.
+ * 2. **API key dedicada** (`INTEGRATION_API_KEY`) como
+ *    `Authorization: Bearer <key>` — para integraciones externas
+ *    (bot de Rust) que no usan navegador.
  *
  * Sin esto, el endpoint expondría datos de pacientes a cualquier persona.
  */
@@ -35,8 +37,14 @@ export async function esProfesionalAutorizado(request: NextRequest): Promise<boo
     console.error("[esProfesionalAutorizado] Error verificando sesión:", err);
   }
 
-  // 2. Fallback para integraciones externas: service role key como Bearer token
+  // 2. Integraciones externas (bot de Rust): API key dedicada
+  // (INTEGRATION_API_KEY), NUNCA la service role key. Comparación en
+  // tiempo constante para evitar timing side-channels.
   const authHeader = request.headers.get("authorization") ?? "";
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  return !!serviceKey && authHeader === `Bearer ${serviceKey}`;
+  const expected = process.env.INTEGRATION_API_KEY;
+  if (!expected || !authHeader.startsWith("Bearer ")) return false;
+  const provided = authHeader.slice("Bearer ".length);
+  const a = Buffer.from(provided);
+  const b = Buffer.from(expected);
+  return a.length === b.length && timingSafeEqual(a, b);
 }

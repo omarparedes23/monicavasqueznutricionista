@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useId, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
@@ -22,6 +22,8 @@ const sizeClasses = {
 
 export function Modal({ open, onClose, title, description, children, size = "md" }: ModalProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const titleId = useId();
 
   // Cerrar con Escape
   useEffect(() => {
@@ -31,6 +33,47 @@ export function Modal({ open, onClose, title, description, children, size = "md"
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
   }, [open, onClose]);
+
+  // Focus trap: guardar el elemento activo, mover el foco al diálogo
+  // y restaurarlo al cerrar/desmontar.
+  useEffect(() => {
+    if (!open) return;
+
+    const prevFocus = document.activeElement as HTMLElement | null;
+    dialogRef.current?.focus();
+
+    const handleTab = (e: KeyboardEvent) => {
+      if (e.key !== "Tab") return;
+      const dialog = dialogRef.current;
+      if (!dialog) return;
+
+      const focusables = dialog.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusables.length === 0) {
+        e.preventDefault();
+        return;
+      }
+
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      const active = document.activeElement;
+
+      if (e.shiftKey && (active === first || !dialog.contains(active))) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && (active === last || !dialog.contains(active))) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener("keydown", handleTab);
+    return () => {
+      document.removeEventListener("keydown", handleTab);
+      prevFocus?.focus();
+    };
+  }, [open]);
 
   // Bloquear scroll del body
   useEffect(() => {
@@ -63,6 +106,8 @@ export function Modal({ open, onClose, title, description, children, size = "md"
           {/* Panel */}
           <div className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4">
             <motion.div
+              ref={dialogRef}
+              tabIndex={-1}
               initial={{ opacity: 0, y: 40, scale: 0.97 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 20, scale: 0.97 }}
@@ -71,12 +116,13 @@ export function Modal({ open, onClose, title, description, children, size = "md"
                 "relative w-full bg-white shadow-2xl",
                 "rounded-t-2xl sm:rounded-2xl",
                 "max-h-[95vh] overflow-y-auto",
+                "outline-none",
                 sizeClasses[size]
               )}
               onClick={(e) => e.stopPropagation()}
               role="dialog"
               aria-modal="true"
-              aria-labelledby={title ? "modal-title" : undefined}
+              aria-labelledby={title ? titleId : undefined}
             >
               {/* Handle bar (mobile) */}
               <div className="flex justify-center pb-1 pt-3 sm:hidden">
@@ -88,7 +134,7 @@ export function Modal({ open, onClose, title, description, children, size = "md"
                 <div className="flex items-start justify-between p-6 pb-4">
                   <div>
                     {title && (
-                      <h2 id="modal-title" className="text-lg font-semibold text-slate-900">
+                      <h2 id={titleId} className="text-lg font-semibold text-slate-900">
                         {title}
                       </h2>
                     )}

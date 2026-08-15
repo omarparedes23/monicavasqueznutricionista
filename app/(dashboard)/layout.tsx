@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { signOut } from "@/lib/actions/auth";
 import { NavLink } from "@/components/dashboard/NavLink";
+import { MobileNav } from "@/components/dashboard/MobileNav";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createServerSupabaseClient();
@@ -61,13 +62,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
       </aside>
 
       {/* Mobile header */}
-      <div className="fixed left-0 right-0 top-0 z-40 flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 md:hidden">
-        <h2 className="text-base font-bold text-slate-900">Monica Nutricionista</h2>
-        <form action={signOut}>
-          <button type="submit" className="text-sm text-red-600 hover:underline">
-            Salir
-          </button>
-        </form>
+      <div className="fixed left-0 right-0 top-0 z-40 border-b border-slate-200 bg-white md:hidden">
+        <div className="flex items-center justify-between px-4 py-3">
+          <h2 className="text-base font-bold text-slate-900">Monica Nutricionista</h2>
+          <MobileNav isProfesional={isProfesional} />
+        </div>
       </div>
 
       {/* Main */}

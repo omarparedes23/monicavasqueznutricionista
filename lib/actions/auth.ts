@@ -1,7 +1,9 @@
 "use server";
 
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { checkRateLimit, clientIpFromHeaders } from "@/lib/utils/rate-limit";
 
 export async function signInWithPassword(_prevState: unknown, formData: FormData) {
   const email = formData.get("email") as string;
@@ -20,6 +22,13 @@ export async function signInWithPassword(_prevState: unknown, formData: FormData
 
 export async function signInWithOtp(_prevState: unknown, formData: FormData) {
   const email = formData.get("email") as string;
+
+  // Rate limit por email+IP (mitiga email bombing / spam de cuentas)
+  const ip = clientIpFromHeaders(await headers());
+  const rl = checkRateLimit(`otp:${email.toLowerCase()}:${ip}`, 3, 60_000);
+  if (!rl.ok) {
+    return { error: "Demasiados intentos. Esperá un minuto y volvé a intentar." };
+  }
 
   const supabase = await createServerSupabaseClient();
   const { error } = await supabase.auth.signInWithOtp({

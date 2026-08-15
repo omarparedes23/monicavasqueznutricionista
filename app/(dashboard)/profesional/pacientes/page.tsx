@@ -31,11 +31,12 @@ export default async function PacientesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-slate-900">Pacientes</h1>
-        <Link href="/profesional/pacientes/nuevo">
-          <Button size="sm" leftIcon={<Plus className="h-4 w-4" />}>
+        <Button asChild size="sm">
+          <Link href="/profesional/pacientes/nuevo">
+            <Plus className="h-4 w-4" />
             Crear paciente
-          </Button>
-        </Link>
+          </Link>
+        </Button>
       </div>
 
       {pacientes.length === 0 ? (
@@ -54,11 +55,12 @@ function EmptyState() {
       <p className="mt-1 text-xs text-slate-400">
         Creá el primero haciendo clic en "Crear paciente".
       </p>
-      <Link href="/profesional/pacientes/nuevo" className="mt-4">
-        <Button size="sm" leftIcon={<Plus className="h-4 w-4" />}>
+      <Button asChild size="sm" className="mt-4">
+        <Link href="/profesional/pacientes/nuevo">
+          <Plus className="h-4 w-4" />
           Crear paciente
-        </Button>
-      </Link>
+        </Link>
+      </Button>
     </div>
   );
 }

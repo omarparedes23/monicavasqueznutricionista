@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { crearCita } from "@/lib/services/booking";
+import { checkRateLimit, clientIpFromHeaders } from "@/lib/utils/rate-limit";
 
 const AppointmentSchema = z.object({
   patient_name: z
@@ -38,6 +39,16 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) {
     const firstError = parsed.error.errors[0]?.message ?? "Datos inválidos.";
     return NextResponse.json({ error: firstError }, { status: 400 });
+  }
+
+  // Rate limit por IP: endpoint público, abusable para spam de citas/emails.
+  const ip = clientIpFromHeaders(request.headers);
+  const rl = checkRateLimit(`api:appointments:${ip}`, 5, 60_000);
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: "Demasiadas reservas en poco tiempo. Esperá un momento." },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfterSeconds ?? 60) } }
+    );
   }
 
   const { patient_name, date, time, source, patient_email, patient_phone } = parsed.data;

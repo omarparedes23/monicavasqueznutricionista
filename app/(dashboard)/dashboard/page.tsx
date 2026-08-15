@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
-import { getUser } from "@/lib/supabase/server";
-import { createServiceRoleClient } from "@/lib/supabase/server";
+import { createServerSupabaseClient, getUser } from "@/lib/supabase/server";
 
 /**
  * Página de entrada al dashboard: lee el rol del usuario
@@ -16,12 +15,15 @@ export default async function DashboardRedirectPage() {
     redirect("/login");
   }
 
-  const supabase = createServiceRoleClient();
-  const { data: perfil } = await supabase
+  const supabase = await createServerSupabaseClient();
+  // @supabase/ssr + supabase-js: el schema se resuelve como any/never;
+  // cast para extraer solo el rol (mismo patrón que el layout del dashboard).
+  const { data: perfilRaw } = await supabase
     .from("nutri_perfiles")
     .select("rol")
     .eq("id", user.id)
     .single();
+  const perfil = perfilRaw as { rol: string } | null;
 
   if (perfil?.rol === "profesional") {
     redirect("/profesional");

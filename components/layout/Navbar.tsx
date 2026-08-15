@@ -42,9 +42,9 @@ export function Navbar() {
               {link.label}
             </Link>
           ))}
-          <Link href="/reserva">
-            <Button size="sm">Reservar</Button>
-          </Link>
+          <Button asChild size="sm">
+            <Link href="/reserva">Reservar</Link>
+          </Button>
         </div>
 
         {/* Mobile hamburger */}
@@ -74,11 +74,11 @@ export function Navbar() {
                 {link.label}
               </Link>
             ))}
-            <Link href="/reserva" onClick={() => setMobileOpen(false)}>
-              <Button size="sm" className="w-full">
+            <Button asChild size="sm" className="w-full">
+              <Link href="/reserva" onClick={() => setMobileOpen(false)}>
                 Reservar
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           </div>
         </div>
       )}

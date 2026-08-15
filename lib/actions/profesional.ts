@@ -94,45 +94,14 @@ export async function getPacientes(): Promise<PacienteConEmail[]> {
     return [];
   }
 
-  const perfilesList = (perfiles ?? []) as PacienteConEmail[];
-  if (perfilesList.length === 0) return [];
-
-  // Obtener emails y teléfonos desde auth.users
-  try {
-    const authAdmin = (supabase as any).auth.admin;
-    const { data: usersData, error: usersError } = await authAdmin.listUsers({
-      perPage: 1000,
-    });
-
-    if (usersError) {
-      console.error("[getPacientes] Error listUsers:", usersError);
-      // Devolver perfiles sin email si falla auth
-      return perfilesList.map((p) => ({
-        ...p,
-        email: "",
-        telefono: "",
-      }));
-    }
-
-    const users = usersData?.users ?? [];
-    const userMap = new Map<string, any>(users.map((u: any) => [u.id, u]));
-
-    return perfilesList.map((p) => {
-      const authUser = userMap.get(p.id);
-      return {
-        ...p,
-        email: authUser?.email ?? "",
-        telefono: authUser?.user_metadata?.telefono ?? authUser?.phone ?? "",
-      };
-    });
-  } catch (err) {
-    console.error("[getPacientes] Excepción listUsers:", err);
-    return perfilesList.map((p) => ({
-      ...p,
-      email: "",
-      telefono: "",
-    }));
-  }
+  // email/telefono ya viven desnormalizados en nutri_perfiles
+  // (supabase/fix-seguridad.sql): una sola query, sin la API admin de
+  // auth (listUsers fallaba con "Database error finding users").
+  return (perfiles ?? []).map((p) => ({
+    ...p,
+    email: p.email ?? "",
+    telefono: p.telefono ?? "",
+  })) as PacienteConEmail[];
 }
 
 /**
@@ -156,32 +125,12 @@ export async function getPacienteById(id: string): Promise<PacienteConEmail | nu
     return null;
   }
 
-  try {
-    const authAdmin = (supabase as any).auth.admin;
-    const { data: userData, error: userError } = await authAdmin.getUserById(id);
-
-    if (userError || !userData?.user) {
-      console.error("[getPacienteById] Error getUserById:", userError);
-      return {
-        ...perfil,
-        email: "",
-        telefono: "",
-      } as PacienteConEmail;
-    }
-
-    return {
-      ...perfil,
-      email: userData.user.email ?? "",
-      telefono: userData.user.user_metadata?.telefono ?? userData.user.phone ?? "",
-    } as PacienteConEmail;
-  } catch (err) {
-    console.error("[getPacienteById] Excepción getUserById:", err);
-    return {
-      ...perfil,
-      email: "",
-      telefono: "",
-    } as PacienteConEmail;
-  }
+  // email/telefono desnormalizados en nutri_perfiles (fix-seguridad.sql).
+  return {
+    ...perfil,
+    email: perfil.email ?? "",
+    telefono: perfil.telefono ?? "",
+  } as PacienteConEmail;
 }
 
 /**
@@ -245,6 +194,8 @@ export async function crearPaciente(
   const { error: upsertError } = await supabase.from("nutri_perfiles").upsert({
     id: userId,
     nombre,
+    email,
+    telefono: telefono ?? null,
     fecha_nacimiento: fecha_nacimiento ?? null,
     historia_clinica: historia_clinica ?? null,
     rol: "paciente",

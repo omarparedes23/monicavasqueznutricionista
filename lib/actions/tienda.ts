@@ -94,6 +94,11 @@ export async function getProductoBySlug(slug: string): Promise<Producto | null> 
  * Solo accesible por usuarios con rol "profesional".
  */
 export async function getProductosAdmin(): Promise<Producto[]> {
+  // Auto-protección: server action exportada; sin guard cualquier cliente
+  // podría leer el catálogo oculto (precios, productos no lanzados).
+  const guard = await guardProfesional();
+  if (!guard.ok) return [];
+
   const supabase = createServiceRoleClient();
 
   const { data, error } = await supabase

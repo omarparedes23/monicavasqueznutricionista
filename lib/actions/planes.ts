@@ -162,6 +162,12 @@ export interface CreatePlanInput {
  * Crea un registro de plan en la base de datos.
  */
 export async function createPlanRecord(input: CreatePlanInput): Promise<Plan | null> {
+  // Auto-protección: es una Server Action exportada ("use server"); cualquier
+  // import futuro desde un componente cliente la haría invocable sin el
+  // guard que ya aplica subirPlanProfesional.
+  const guard = await guardProfesional();
+  if (!guard.ok) return null;
+
   const supabase = createServiceRoleClient();
 
   const { data, error } = await supabase

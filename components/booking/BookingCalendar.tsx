@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useCallback, useEffect } from "react";
+import { useState, useTransition, useCallback, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
@@ -22,11 +22,15 @@ export function BookingCalendar({ onFechaSeleccionada, fechaSeleccionada }: Book
   const [mesActual, setMesActual] = useState(new Date(hoy.getFullYear(), hoy.getMonth(), 1));
   const [fechasDisponibles, setFechasDisponibles] = useState<Set<string>>(new Set());
   const [cargandoMes, startTransition] = useTransition();
+  // Contador local para ignorar respuestas obsoletas si el usuario cambió de mes
+  const requestCounter = useRef(0);
 
   const cargarFechasDelMes = useCallback(
     (fecha: Date) => {
+      const requestId = ++requestCounter.current;
       startTransition(async () => {
         const result = await getFechasDisponibles(fecha.getFullYear(), fecha.getMonth());
+        if (requestCounter.current !== requestId) return;
         if (result.success) {
           setFechasDisponibles(new Set(result.data));
         }

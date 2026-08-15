@@ -55,6 +55,9 @@ export interface Perfil {
   fecha_nacimiento: string | null;
   historia_clinica: string | null;
   rol: Rol;
+  /** Desnormalizado desde auth.users (ver supabase/fix-seguridad.sql). */
+  email: string | null;
+  telefono: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -336,6 +339,8 @@ export type Database = {
           fecha_nacimiento: string | null;
           historia_clinica: string | null;
           rol: string;
+          email: string | null;
+          telefono: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -346,6 +351,8 @@ export type Database = {
           fecha_nacimiento?: string | null;
           historia_clinica?: string | null;
           rol?: string;
+          email?: string | null;
+          telefono?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -356,6 +363,8 @@ export type Database = {
           fecha_nacimiento?: string | null;
           historia_clinica?: string | null;
           rol?: string;
+          email?: string | null;
+          telefono?: string | null;
           created_at?: string;
           updated_at?: string;
         };

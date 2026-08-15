@@ -1,7 +1,9 @@
 "use server";
 
 import { z } from "zod";
+import { headers } from "next/headers";
 import { crearCita } from "@/lib/services/booking";
+import { checkRateLimit, clientIpFromHeaders } from "@/lib/utils/rate-limit";
 import type { ActionResult, CitaConfirmada } from "@/types";
 
 // ============================================================
@@ -34,7 +36,17 @@ export async function reservarCita(input: BookingInput): Promise<ActionResult<Ci
 
   const { fecha, hora_inicio, hora_fin, nombre, email, telefono } = parsed.data;
 
-  // 2. Delegar al servicio compartido (misma lógica que POST /api/appointments):
+  // 2. Rate limit por IP (mitiga spam de citas y de emails)
+  const ip = clientIpFromHeaders(await headers());
+  const rl = checkRateLimit(`reservar:${ip}`, 5, 60_000);
+  if (!rl.ok) {
+    return {
+      success: false,
+      error: "Demasiadas reservas en poco tiempo. Esperá un momento y volvé a intentar.",
+    };
+  }
+
+  // 3. Delegar al servicio compartido (misma lógica que POST /api/appointments):
   //    verificación de slot, anti-race condition, auto-creación de usuario,
   //    INSERT y emails.
   return crearCita({ fecha, hora_inicio, hora_fin, nombre, email, telefono });

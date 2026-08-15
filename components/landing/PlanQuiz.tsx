@@ -130,11 +130,12 @@ export function PlanQuiz() {
             <p className="mb-6 text-sm text-slate-600 leading-relaxed">{recommendation?.desc}</p>
 
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <Link href="/reserva">
-                <Button size="md" rightIcon={<ArrowRight className="h-4 w-4" />}>
+              <Button asChild size="md">
+                <Link href="/reserva">
                   Reservar este Plan ({modality === "online" ? "Online" : "Presencial"})
-                </Button>
-              </Link>
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
 
               <button
                 onClick={() => {

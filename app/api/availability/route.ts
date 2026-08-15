@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { calcularSlotsDisponibles } from "@/lib/utils/slots";
+import { checkRateLimit, clientIpFromHeaders } from "@/lib/utils/rate-limit";
 
 /**
  * GET /api/availability?date=YYYY-MM-DD
@@ -13,6 +14,16 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       { error: "Parámetro 'date' requerido. Formato esperado: YYYY-MM-DD" },
       { status: 400 }
+    );
+  }
+
+  // Rate limit por IP: endpoint público consultado desde el calendario.
+  const ip = clientIpFromHeaders(request.headers);
+  const rl = checkRateLimit(`api:availability:${ip}`, 60, 60_000);
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: "Demasiadas consultas. Esperá un momento." },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfterSeconds ?? 60) } }
     );
   }
 
@@ -40,9 +51,11 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Error al cargar disponibilidad." }, { status: 500 });
   }
 
+  // Solo se proyectan los campos necesarios para el cálculo de slots
+  // (minimización: las filas completas de nutri_citas contienen PII).
   const { data: citas, error: citasError } = await supabase
     .from("nutri_citas")
-    .select("*")
+    .select("fecha_inicio, fecha_fin, estado")
     .eq("profesional_id", config.id)
     .neq("estado", "cancelada")
     .gte("fecha_inicio", `${date}T00:00:00.000Z`)

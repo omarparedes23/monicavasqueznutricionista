@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Clock, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
@@ -21,11 +21,15 @@ export function TimeSlotPicker({
 }: TimeSlotPickerProps) {
   const [slots, setSlots] = useState<TimeSlot[]>([]);
   const [isPending, startTransition] = useTransition();
+  // Contador local para ignorar respuestas obsoletas si el usuario cambió de fecha
+  const requestCounter = useRef(0);
 
   useEffect(() => {
+    const requestId = ++requestCounter.current;
     startTransition(async () => {
       const fechaStr = toDateString(fecha);
       const result = await getSlotsParaFecha(fechaStr);
+      if (requestCounter.current !== requestId) return;
       if (result.success) {
         setSlots(result.data);
       }

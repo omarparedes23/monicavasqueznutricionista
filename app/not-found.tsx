@@ -10,9 +10,9 @@ export default function NotFound() {
         <p className="mb-8 text-sm text-slate-500">
           Esta página no existe. Vuelve al inicio para reservar tu cita.
         </p>
-        <Link href="/">
-          <Button>Volver al inicio</Button>
-        </Link>
+        <Button asChild>
+          <Link href="/">Volver al inicio</Link>
+        </Button>
       </div>
     </main>
   );

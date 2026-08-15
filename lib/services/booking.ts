@@ -136,7 +136,10 @@ export async function crearCita(input: CrearCitaInput): Promise<CrearCitaResulta
     const authAdmin = (supabase as unknown as AuthAdminClient).auth.admin;
     const { data: createData, error: createError } = await authAdmin.createUser({
       email,
-      email_confirm: true,
+      // No confirmar automáticamente: la cuenta se confirma cuando el
+      // paciente entra por magic link (OTP). Evita cuentas plenamente
+      // utilizables creadas sin verificación desde el flujo público.
+      email_confirm: false,
       user_metadata: { nombre },
     });
     if (createError) {
@@ -218,7 +221,15 @@ export async function crearCita(input: CrearCitaInput): Promise<CrearCitaResulta
     );
   }
 
-  const [emailProfesionalOk, emailPacienteOk] = await Promise.all(envios);
+  let emailProfesionalOk = false;
+  let emailPacienteOk = false;
+  try {
+    [emailProfesionalOk, emailPacienteOk] = await Promise.all(envios);
+  } catch (err) {
+    // La cita ya quedó creada: un fallo de email no debe devolver 500
+    // (el cliente reintentaría y duplicaría la cita).
+    console.error("[crearCita] Error enviando emails:", err);
+  }
 
   // 9. Actualizar flags de email en la cita
   await supabase

@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef } from "react";
+import { Children, cloneElement, forwardRef, isValidElement } from "react";
 import { cn } from "@/lib/utils/cn";
 import { Loader2 } from "lucide-react";
 
@@ -13,6 +13,8 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   loading?: boolean;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
+  /** Si es true, clona el único hijo (ej: <Link>) con las clases del botón */
+  asChild?: boolean;
 }
 
 const variantClasses: Record<ButtonVariant, string> = {
@@ -36,6 +38,11 @@ const sizeClasses: Record<ButtonSize, string> = {
   lg: "h-12 px-6 text-base gap-2.5 rounded-xl",
 };
 
+const baseClasses =
+  "inline-flex items-center justify-center font-medium transition-all duration-150 " +
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 " +
+  "select-none disabled:pointer-events-none disabled:opacity-50";
+
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   (
     {
@@ -44,6 +51,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       loading = false,
       leftIcon,
       rightIcon,
+      asChild = false,
       children,
       className,
       disabled,
@@ -53,18 +61,23 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ) => {
     const isDisabled = disabled || loading;
 
+    // Modo asChild: clona el único hijo (típicamente un <Link>) con las clases del botón
+    if (asChild) {
+      const child = Children.only(children);
+      if (!isValidElement(child)) {
+        throw new Error("<Button asChild> requiere un único hijo válido (ej: <Link> de next/link)");
+      }
+      return cloneElement(child as React.ReactElement<Record<string, unknown>>, {
+        ...props,
+        className: cn(baseClasses, variantClasses[variant], sizeClasses[size], className),
+      });
+    }
+
     return (
       <button
         ref={ref}
         disabled={isDisabled}
-        className={cn(
-          "inline-flex items-center justify-center font-medium transition-all duration-150",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
-          "select-none disabled:pointer-events-none disabled:opacity-50",
-          variantClasses[variant],
-          sizeClasses[size],
-          className
-        )}
+        className={cn(baseClasses, variantClasses[variant], sizeClasses[size], className)}
         {...props}
       >
         {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : leftIcon}

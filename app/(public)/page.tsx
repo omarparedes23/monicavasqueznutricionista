@@ -24,6 +24,9 @@ import { ProductoCard } from "@/components/tienda/ProductoCard";
 import { PlanQuiz } from "@/components/landing/PlanQuiz";
 import { TestimonialsSection } from "@/components/landing/TestimonialsSection";
 import { FaqSection } from "@/components/landing/FaqSection";
+import { cache } from "react";
+
+export const revalidate = 3600;
 
 /* ============================================================
    LANDING PAGE — Mónica Vásquez, Licenciada en Nutrición
@@ -88,8 +91,12 @@ const PASOS = [
   },
 ];
 
+// Wrappers cacheados para deduplicar fetches dentro de un mismo render
+const getBlogPostsCached = cache((limit: number) => getBlogPosts(limit));
+const getProductosCached = cache(() => getProductos());
+
 export default async function LandingPage() {
-  const [blogPosts, productos] = await Promise.all([getBlogPosts(3), getProductos()]);
+  const [blogPosts, productos] = await Promise.all([getBlogPostsCached(3), getProductosCached()]);
 
   return (
     <div className="w-full">
@@ -122,17 +129,27 @@ export default async function LandingPage() {
 
             {/* CTAs */}
             <div className="flex flex-col items-center gap-3.5 sm:flex-row sm:justify-center md:justify-start">
-              <Link href="/reserva">
-                <Button size="lg" rightIcon={<ArrowRight className="h-5 w-5" />} className="w-full sm:w-auto shadow-xl shadow-brand-500/20 hover:shadow-brand-500/30">
+              <Button
+                asChild
+                size="lg"
+                className="w-full sm:w-auto shadow-xl shadow-brand-500/20 hover:shadow-brand-500/30"
+              >
+                <Link href="/reserva">
                   Agendar consulta ahora
-                </Button>
-              </Link>
-              <Link href="#quiz">
-                <Button variant="secondary" size="lg" className="w-full sm:w-auto border-slate-200/90 bg-white hover:bg-slate-50">
+                  <ArrowRight className="h-5 w-5" />
+                </Link>
+              </Button>
+              <Button
+                asChild
+                variant="secondary"
+                size="lg"
+                className="w-full sm:w-auto border-slate-200/90 bg-white hover:bg-slate-50"
+              >
+                <Link href="#quiz">
                   <Sparkles className="h-4 w-4 mr-2 text-brand-600" />
                   Descubrir mi plan ideal
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             </div>
 
             {/* Trust pills */}
@@ -467,15 +484,16 @@ export default async function LandingPage() {
           </p>
 
           <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <Link href="/reserva">
-              <Button
-                size="lg"
-                rightIcon={<ArrowRight className="h-5 w-5" />}
-                className="w-full sm:w-auto shadow-xl shadow-brand-500/25 hover:shadow-brand-500/40 px-8 py-4 text-base font-bold"
-              >
+            <Button
+              asChild
+              size="lg"
+              className="w-full sm:w-auto shadow-xl shadow-brand-500/25 hover:shadow-brand-500/40 px-8 py-4 text-base font-bold"
+            >
+              <Link href="/reserva">
                 Reservar mi turno
-              </Button>
-            </Link>
+                <ArrowRight className="h-5 w-5" />
+              </Link>
+            </Button>
           </div>
 
           <p className="mt-4 text-xs font-medium text-slate-400">
